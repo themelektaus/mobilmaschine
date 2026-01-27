@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobilmaschine - Dateibrowser</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/materialdesignicons.min.css">
+</head>
+<body>
+    <header>
+        <h1>Mobilmaschine</h1>
+    </header>
+
+    <nav id="breadcrumb" class="breadcrumb">
+        <a href="#" data-path="">Speicher</a>
+    </nav>
+
+    <main>
+        <div id="toolbar" class="toolbar">
+            <span id="item-count" class="item-count"></span>
+            <div class="toolbar-actions">
+                <button id="btn-new-folder" class="toolbar-btn" title="Neuer Ordner">
+                    <i class="mdi mdi-folder-plus"></i>
+                </button>
+                <button id="btn-new-file" class="toolbar-btn" title="Neue Datei">
+                    <i class="mdi mdi-file-plus"></i>
+                </button>
+                <div class="sort-controls">
+                    <select id="sort-select">
+                        <option value="name-asc">Name A-Z</option>
+                        <option value="name-desc">Name Z-A</option>
+                        <option value="date-desc">Datum (neueste)</option>
+                        <option value="date-asc">Datum (aelteste)</option>
+                        <option value="size-desc">Groesse (absteigend)</option>
+                        <option value="size-asc">Groesse (aufsteigend)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="file-list" class="file-list">
+            <div class="loading">Wird geladen...</div>
+        </div>
+    </main>
+
+    <div id="context-menu" class="context-menu hidden"></div>
+
+    <div id="drop-overlay" class="drop-overlay hidden">
+        <div class="drop-overlay-content">
+            <i class="mdi mdi-cloud-upload"></i>
+            <span>Dateien hier ablegen</span>
+        </div>
+    </div>
+
+    <div id="upload-panel" class="upload-panel hidden">
+        <div class="upload-panel-header">
+            <span id="upload-panel-title">Upload</span>
+            <button id="upload-panel-close" class="lightbox-btn"><i class="mdi mdi-close"></i></button>
+        </div>
+        <div id="upload-panel-list" class="upload-panel-list"></div>
+    </div>
+
+    <div id="error-toast" class="error-toast hidden"></div>
+
+    <div id="dialog-overlay" class="dialog-overlay hidden">
+        <div class="dialog-backdrop"></div>
+        <div class="dialog-box">
+            <div class="dialog-header" id="dialog-title"></div>
+            <div class="dialog-body">
+                <p id="dialog-message"></p>
+                <input id="dialog-input" type="text" class="dialog-input">
+            </div>
+            <div class="dialog-footer">
+                <button id="dialog-cancel" class="dialog-btn dialog-btn-cancel">Abbrechen</button>
+                <button id="dialog-confirm" class="dialog-btn dialog-btn-confirm">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lightbox" class="lightbox hidden">
+        <div class="lightbox-backdrop"></div>
+        <div class="lightbox-container">
+            <div class="lightbox-header">
+                <span id="lightbox-title" class="lightbox-title"></span>
+                <div class="lightbox-actions">
+                    <a id="lightbox-download" class="lightbox-btn" title="Herunterladen"><i class="mdi mdi-download"></i></a>
+                    <button id="lightbox-close" class="lightbox-btn" title="Schliessen"><i class="mdi mdi-close"></i></button>
+                </div>
+            </div>
+            <div id="lightbox-body" class="lightbox-body"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
