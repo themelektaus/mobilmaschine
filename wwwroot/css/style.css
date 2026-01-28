@@ -155,7 +155,7 @@ header h1 {
 }
 
 .battery-indicator.hidden {
-    display: none;
+    opacity: .4;
 }
 
 .battery-indicator .mdi {

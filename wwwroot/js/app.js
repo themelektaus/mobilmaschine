@@ -14,53 +14,49 @@ const PAGE_TITLES = {
     system: 'System',
 };
 
-const elements = {
-    // Navigation
-    pageTitle: document.getElementById('page-title'),
+const $ = {
+    pageTitle: query('#page-title'),
     pages: {
-        files: document.getElementById('page-files'),
-        messages: document.getElementById('page-messages'),
-        system: document.getElementById('page-system'),
+        files: query('#page-files'),
+        messages: query('#page-messages'),
+        system: query('#page-system'),
     },
-    navItems: document.querySelectorAll('.nav-item'),
-    // Files
-    fileList: document.getElementById('file-list'),
-    breadcrumb: document.getElementById('breadcrumb'),
-    customSelect: document.getElementById('custom-select'),
-    customSelectTrigger: document.querySelector('.custom-select-trigger'),
-    customSelectValue: document.querySelector('.custom-select-value'),
-    customSelectDropdown: document.querySelector('.custom-select-dropdown'),
-    itemCount: document.getElementById('item-count'),
-    errorToast: document.getElementById('error-toast'),
-    lightbox: document.getElementById('lightbox'),
-    lightboxTitle: document.getElementById('lightbox-title'),
-    lightboxBody: document.getElementById('lightbox-body'),
-    lightboxDownload: document.getElementById('lightbox-download'),
-    lightboxSave: document.getElementById('lightbox-save'),
-    lightboxClose: document.getElementById('lightbox-close'),
-    lightboxBackdrop: document.querySelector('.lightbox-backdrop'),
-    dropOverlay: document.getElementById('drop-overlay'),
-    uploadPanel: document.getElementById('upload-panel'),
-    uploadPanelTitle: document.getElementById('upload-panel-title'),
-    uploadPanelList: document.getElementById('upload-panel-list'),
-    uploadPanelClose: document.getElementById('upload-panel-close'),
-    contextMenu: document.getElementById('context-menu'),
-    btnNewFolder: document.getElementById('btn-new-folder'),
-    btnNewFile: document.getElementById('btn-new-file'),
-    btnPaste: document.getElementById('btn-paste'),
-    dialogOverlay: document.getElementById('dialog-overlay'),
-    dialogBackdrop: document.querySelector('.dialog-backdrop'),
-    dialogTitle: document.getElementById('dialog-title'),
-    dialogMessage: document.getElementById('dialog-message'),
-    dialogInput: document.getElementById('dialog-input'),
-    dialogCancel: document.getElementById('dialog-cancel'),
-    dialogConfirm: document.getElementById('dialog-confirm'),
-    // SMS
-    smsList: document.getElementById('sms-list'),
-    smsCount: document.getElementById('sms-count'),
-    btnRefreshSms: document.getElementById('btn-refresh-sms'),
-    // System
-    systemInfo: document.getElementById('system-info'),
+    navItems: queryAll('.nav-item'),
+    fileList: query('#file-list'),
+    breadcrumb: query('#breadcrumb'),
+    customSelect: query('#custom-select'),
+    customSelectTrigger: query('.custom-select-trigger'),
+    customSelectValue: query('.custom-select-value'),
+    customSelectDropdown: query('.custom-select-dropdown'),
+    itemCount: query('#item-count'),
+    errorToast: query('#error-toast'),
+    lightbox: query('#lightbox'),
+    lightboxTitle: query('#lightbox-title'),
+    lightboxBody: query('#lightbox-body'),
+    lightboxDownload: query('#lightbox-download'),
+    lightboxSave: query('#lightbox-save'),
+    lightboxClose: query('#lightbox-close'),
+    lightboxBackdrop: query('.lightbox-backdrop'),
+    dropOverlay: query('#drop-overlay'),
+    uploadPanel: query('#upload-panel'),
+    uploadPanelTitle: query('#upload-panel-title'),
+    uploadPanelList: query('#upload-panel-list'),
+    uploadPanelClose: query('#upload-panel-close'),
+    contextMenu: query('#context-menu'),
+    btnNewFolder: query('#btn-new-folder'),
+    btnNewFile: query('#btn-new-file'),
+    btnPaste: query('#btn-paste'),
+    dialogOverlay: query('#dialog-overlay'),
+    dialogBackdrop: query('.dialog-backdrop'),
+    dialogTitle: query('#dialog-title'),
+    dialogMessage: query('#dialog-message'),
+    dialogInput: query('#dialog-input'),
+    dialogCancel: query('#dialog-cancel'),
+    dialogConfirm: query('#dialog-confirm'),
+    smsList: query('#sms-list'),
+    smsCount: query('#sms-count'),
+    btnRefreshSms: query('#btn-refresh-sms'),
+    systemInfo: query('#system-info'),
 };
 
 const PREVIEW_TYPES = {
@@ -86,9 +82,9 @@ function getPreviewType(ext) {
 // --- Initialization ---
 
 // Custom Select
-elements.customSelectTrigger.addEventListener('click', (e) => {
+$.customSelectTrigger.on('click', (e) => {
     e.stopPropagation();
-    const isOpen = elements.customSelect.classList.contains('open');
+    const isOpen = $.customSelect.classList.contains('open');
     if (isOpen) {
         closeCustomSelect();
     } else {
@@ -96,8 +92,8 @@ elements.customSelectTrigger.addEventListener('click', (e) => {
     }
 });
 
-elements.customSelectDropdown.querySelectorAll('.custom-select-option').forEach((option) => {
-    option.addEventListener('click', (e) => {
+$.customSelectDropdown.queryAll('.custom-select-option').forEach((option) => {
+    option.on('click', (e) => {
         e.stopPropagation();
         const value = option.dataset.value;
         const text = option.textContent;
@@ -106,10 +102,10 @@ elements.customSelectDropdown.querySelectorAll('.custom-select-option').forEach(
         state.sortBy = value;
 
         // Update UI
-        elements.customSelectValue.textContent = text;
+        $.customSelectValue.textContent = text;
 
         // Update selected styling
-        elements.customSelectDropdown.querySelectorAll('.custom-select-option').forEach((opt) => {
+        $.customSelectDropdown.queryAll('.custom-select-option').forEach((opt) => {
             opt.classList.remove('selected');
         });
         option.classList.add('selected');
@@ -121,39 +117,39 @@ elements.customSelectDropdown.querySelectorAll('.custom-select-option').forEach(
 });
 
 function openCustomSelect() {
-    elements.customSelect.classList.add('open');
-    elements.customSelectDropdown.classList.remove('hidden');
+    $.customSelect.classList.add('open');
+    $.customSelectDropdown.classList.remove('hidden');
 }
 
 function closeCustomSelect() {
-    elements.customSelect.classList.remove('open');
-    elements.customSelectDropdown.classList.add('hidden');
+    $.customSelect.classList.remove('open');
+    $.customSelectDropdown.classList.add('hidden');
 }
 
 // Initialize first option as selected
-elements.customSelectDropdown.querySelector('.custom-select-option').classList.add('selected');
+$.customSelectDropdown.query('.custom-select-option').classList.add('selected');
 
-elements.lightboxClose.addEventListener('click', closeLightbox);
-elements.lightboxBackdrop.addEventListener('click', closeLightbox);
-document.addEventListener('keydown', (e) => {
+$.lightboxClose.on('click', closeLightbox);
+$.lightboxBackdrop.on('click', closeLightbox);
+on('keydown', (e) => {
     if (e.key === 'Escape') {
-        if (!elements.dialogOverlay.classList.contains('hidden')) {
+        if (!$.dialogOverlay.classList.contains('hidden')) {
             closeDialog(null);
-        } else if (!elements.contextMenu.classList.contains('hidden')) {
+        } else if (!$.contextMenu.classList.contains('hidden')) {
             closeContextMenu();
-        } else if (elements.customSelect.classList.contains('open')) {
+        } else if ($.customSelect.classList.contains('open')) {
             closeCustomSelect();
-        } else if (!elements.lightbox.classList.contains('hidden')) {
+        } else if (!$.lightbox.classList.contains('hidden')) {
             closeLightbox();
         }
     }
 });
 
-document.addEventListener('click', (e) => {
-    if (!elements.contextMenu.contains(e.target) && !e.target.closest('.more-btn')) {
+on('click', (e) => {
+    if (!$.contextMenu.contains(e.target) && !e.target.closest('.more-btn')) {
         closeContextMenu();
     }
-    if (!elements.customSelect.contains(e.target)) {
+    if (!$.customSelect.contains(e.target)) {
         closeCustomSelect();
     }
 });
@@ -162,43 +158,43 @@ document.addEventListener('click', (e) => {
 
 let dragCounter = 0;
 
-document.addEventListener('dragenter', (e) => {
+on('dragenter', (e) => {
     e.preventDefault();
     dragCounter++;
     if (dragCounter === 1) {
-        elements.dropOverlay.classList.remove('hidden');
+        $.dropOverlay.classList.remove('hidden');
     }
 });
 
-document.addEventListener('dragleave', (e) => {
+on('dragleave', (e) => {
     e.preventDefault();
     dragCounter--;
     if (dragCounter === 0) {
-        elements.dropOverlay.classList.add('hidden');
+        $.dropOverlay.classList.add('hidden');
     }
 });
 
-document.addEventListener('dragover', (e) => {
+on('dragover', (e) => {
     e.preventDefault();
 });
 
-document.addEventListener('drop', (e) => {
+on('drop', (e) => {
     e.preventDefault();
     dragCounter = 0;
-    elements.dropOverlay.classList.add('hidden');
+    $.dropOverlay.classList.add('hidden');
     const files = e.dataTransfer.files;
     if (files.length > 0) {
         uploadFiles(files);
     }
 });
 
-elements.uploadPanelClose.addEventListener('click', () => {
-    elements.uploadPanel.classList.add('hidden');
+$.uploadPanelClose.on('click', () => {
+    $.uploadPanel.classList.add('hidden');
 });
 
-elements.btnNewFolder.addEventListener('click', () => createNew('mkdir', 'Neuer Ordner'));
-elements.btnNewFile.addEventListener('click', () => createNew('touch', 'Neue Datei'));
-elements.btnPaste.addEventListener('click', () => pasteEntry());
+$.btnNewFolder.on('click', () => createNew('mkdir', 'Neuer Ordner'));
+$.btnNewFile.on('click', () => createNew('touch', 'Neue Datei'));
+$.btnPaste.on('click', () => pasteEntry());
 
 loadDirectory('');
 
@@ -206,7 +202,7 @@ loadDirectory('');
 
 async function loadDirectory(path, pushState = true) {
     state.currentPath = path;
-    elements.fileList.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
+    $.fileList.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
 
     try {
         const response = await fetch(`api/files?path=${encodeURIComponent(path)}`);
@@ -246,10 +242,10 @@ function openFile(path, name, ext) {
 
 async function openLightbox(path, name, previewType) {
     const url = fileUrl(path);
-    elements.lightboxTitle.textContent = name;
-    elements.lightboxDownload.href = url;
-    elements.lightboxDownload.download = name;
-    elements.lightboxDownload.style.display = '';
+    $.lightboxTitle.textContent = name;
+    $.lightboxDownload.href = url;
+    $.lightboxDownload.download = name;
+    $.lightboxDownload.style.display = '';
 
     let content = '';
     switch (previewType) {
@@ -267,56 +263,54 @@ async function openLightbox(path, name, previewType) {
             break;
     }
 
-    elements.lightboxBody.innerHTML = content;
-    elements.lightbox.classList.remove('hidden');
+    $.lightboxBody.innerHTML = content;
+    $.lightbox.classList.remove('hidden');
 
     if (previewType === 'text') {
         try {
             const res = await fetch(url);
             const text = await res.text();
-            elements.lightboxBody.querySelector('pre').textContent = text;
+            $.lightboxBody.query('pre').textContent = text;
         } catch {
-            elements.lightboxBody.querySelector('pre').textContent = 'Fehler beim Laden der Datei.';
+            $.lightboxBody.query('pre').textContent = 'Fehler beim Laden der Datei.';
         }
     }
 }
 
 function closeLightbox() {
-    elements.lightbox.classList.add('hidden');
-    elements.lightboxSave.classList.add('hidden');
-    elements.lightboxSave.onclick = null;
+    $.lightbox.classList.add('hidden');
+    $.lightboxSave.classList.add('hidden');
+    $.lightboxSave.onclick = null;
     // stop any playing media
-    elements.lightboxBody.querySelectorAll('video, audio').forEach((el) => {
+    $.lightboxBody.queryAll('video, audio').forEach((el) => {
         el.pause();
         el.src = '';
     });
-    elements.lightboxBody.innerHTML = '';
+    $.lightboxBody.innerHTML = '';
 }
 
 // --- Edit ---
 
 async function editFile(path, name) {
     const url = fileUrl(path);
-    elements.lightboxTitle.textContent = `Bearbeiten: ${name}`;
-    elements.lightboxDownload.href = url;
-    elements.lightboxDownload.download = name;
-    elements.lightboxDownload.style.display = '';
-    elements.lightboxBody.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
-    elements.lightbox.classList.remove('hidden');
+    $.lightboxTitle.textContent = `Bearbeiten: ${name}`;
+    $.lightboxDownload.href = url;
+    $.lightboxDownload.download = name;
+    $.lightboxDownload.style.display = '';
+    $.lightboxBody.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
+    $.lightbox.classList.remove('hidden');
 
     try {
         const res = await fetch(url);
         const text = await res.text();
-        const textarea = document.createElement('textarea');
+        $.lightboxBody.innerHTML = '';
+        const textarea = $.lightboxBody.create('textarea');
         textarea.value = text;
         textarea.spellcheck = false;
-        elements.lightboxBody.innerHTML = '';
-        elements.lightboxBody.appendChild(textarea);
-
-        elements.lightboxSave.classList.remove('hidden');
-        elements.lightboxSave.onclick = () => saveFile(path, textarea);
+        $.lightboxSave.classList.remove('hidden');
+        $.lightboxSave.onclick = () => saveFile(path, textarea);
     } catch {
-        elements.lightboxBody.innerHTML = '<pre>Fehler beim Laden der Datei.</pre>';
+        $.lightboxBody.innerHTML = '<pre>Fehler beim Laden der Datei.</pre>';
     }
 }
 
@@ -342,30 +336,30 @@ async function saveFile(path, textarea) {
 let dialogResolve = null;
 
 function showDialog({ title, message, input = false, confirmText = 'OK', confirmDanger = false, placeholder = '', defaultValue = '' }) {
-    elements.dialogTitle.textContent = title;
-    elements.dialogMessage.textContent = message;
-    elements.dialogConfirm.textContent = confirmText;
+    $.dialogTitle.textContent = title;
+    $.dialogMessage.textContent = message;
+    $.dialogConfirm.textContent = confirmText;
 
     if (confirmDanger) {
-        elements.dialogConfirm.classList.add('danger');
+        $.dialogConfirm.classList.add('danger');
     } else {
-        elements.dialogConfirm.classList.remove('danger');
+        $.dialogConfirm.classList.remove('danger');
     }
 
     if (input) {
-        elements.dialogInput.classList.add('visible');
-        elements.dialogInput.value = defaultValue;
-        elements.dialogInput.placeholder = placeholder;
+        $.dialogInput.classList.add('visible');
+        $.dialogInput.value = defaultValue;
+        $.dialogInput.placeholder = placeholder;
     } else {
-        elements.dialogInput.classList.remove('visible');
+        $.dialogInput.classList.remove('visible');
     }
 
-    elements.dialogOverlay.classList.remove('hidden');
+    $.dialogOverlay.classList.remove('hidden');
 
     if (input) {
-        requestAnimationFrame(() => elements.dialogInput.focus());
+        requestAnimationFrame(() => $.dialogInput.focus());
     } else {
-        requestAnimationFrame(() => elements.dialogConfirm.focus());
+        requestAnimationFrame(() => $.dialogConfirm.focus());
     }
 
     return new Promise((resolve) => {
@@ -374,25 +368,25 @@ function showDialog({ title, message, input = false, confirmText = 'OK', confirm
 }
 
 function closeDialog(result) {
-    elements.dialogOverlay.classList.add('hidden');
+    $.dialogOverlay.classList.add('hidden');
     if (dialogResolve) {
         dialogResolve(result);
         dialogResolve = null;
     }
 }
 
-elements.dialogCancel.addEventListener('click', () => closeDialog(null));
-elements.dialogBackdrop.addEventListener('click', () => closeDialog(null));
-elements.dialogConfirm.addEventListener('click', () => {
-    if (elements.dialogInput.classList.contains('visible')) {
-        closeDialog(elements.dialogInput.value);
+$.dialogCancel.on('click', () => closeDialog(null));
+$.dialogBackdrop.on('click', () => closeDialog(null));
+$.dialogConfirm.on('click', () => {
+    if ($.dialogInput.classList.contains('visible')) {
+        closeDialog($.dialogInput.value);
     } else {
         closeDialog(true);
     }
 });
-elements.dialogInput.addEventListener('keydown', (e) => {
+$.dialogInput.on('keydown', (e) => {
     if (e.key === 'Enter') {
-        closeDialog(elements.dialogInput.value);
+        closeDialog($.dialogInput.value);
     }
 });
 
@@ -455,23 +449,23 @@ function showContextMenu(anchor, entry) {
     items += `<div class="context-menu-divider"></div>`;
     items += `<button class="context-menu-item danger" data-action="delete"><i class="mdi mdi-delete"></i>Löschen</button>`;
 
-    elements.contextMenu.innerHTML = items;
-    elements.contextMenu.classList.remove('hidden');
+    $.contextMenu.innerHTML = items;
+    $.contextMenu.classList.remove('hidden');
 
     const rect = anchor.getBoundingClientRect();
     let top = rect.bottom + 4;
     let left = rect.right - 180;
 
-    if (top + elements.contextMenu.offsetHeight > window.innerHeight) {
-        top = rect.top - elements.contextMenu.offsetHeight - 4;
+    if (top + $.contextMenu.offsetHeight > window.innerHeight) {
+        top = rect.top - $.contextMenu.offsetHeight - 4;
     }
     if (left < 8) left = 8;
 
-    elements.contextMenu.style.top = `${top}px`;
-    elements.contextMenu.style.left = `${left}px`;
+    $.contextMenu.style.top = `${top}px`;
+    $.contextMenu.style.left = `${left}px`;
 
-    elements.contextMenu.querySelectorAll('.context-menu-item').forEach((btn) => {
-        btn.addEventListener('click', () => {
+    $.contextMenu.queryAll('.context-menu-item').forEach((btn) => {
+        btn.on('click', () => {
             closeContextMenu();
             handleContextAction(btn.dataset.action, entry);
         });
@@ -479,7 +473,7 @@ function showContextMenu(anchor, entry) {
 }
 
 function closeContextMenu() {
-    elements.contextMenu.classList.add('hidden');
+    $.contextMenu.classList.add('hidden');
 }
 
 function handleContextAction(action, entry) {
@@ -571,12 +565,12 @@ async function showFileInfo(path) {
 
         const html = `<dl class="info-grid">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
 
-        elements.lightboxTitle.textContent = `Info: ${info.name}`;
-        elements.lightboxDownload.href = isFile ? fileUrl(path) : '#';
-        elements.lightboxDownload.download = info.name;
-        elements.lightboxDownload.style.display = isFile ? '' : 'none';
-        elements.lightboxBody.innerHTML = html;
-        elements.lightbox.classList.remove('hidden');
+        $.lightboxTitle.textContent = `Info: ${info.name}`;
+        $.lightboxDownload.href = isFile ? fileUrl(path) : '#';
+        $.lightboxDownload.download = info.name;
+        $.lightboxDownload.style.display = isFile ? '' : 'none';
+        $.lightboxBody.innerHTML = html;
+        $.lightbox.classList.remove('hidden');
     } catch {
         showError('Info konnte nicht geladen werden.');
     }
@@ -613,12 +607,12 @@ function setClipboard(operation, entry) {
 
 function updatePasteButton() {
     if (state.clipboard) {
-        elements.btnPaste.disabled = false;
+        $.btnPaste.disabled = false;
         const label = state.clipboard.operation === 'cut' ? 'Einfügen (Verschieben)' : 'Einfügen (Kopie)';
-        elements.btnPaste.title = `${label}: ${state.clipboard.name}`;
+        $.btnPaste.title = `${label}: ${state.clipboard.name}`;
     } else {
-        elements.btnPaste.disabled = true;
-        elements.btnPaste.title = 'Einfügen';
+        $.btnPaste.disabled = true;
+        $.btnPaste.title = 'Einfügen';
     }
 }
 
@@ -652,8 +646,8 @@ const uploadQueue = [];
 function uploadFiles(fileList) {
     const files = Array.from(fileList);
 
-    elements.uploadPanel.classList.remove('hidden');
-    elements.uploadPanelTitle.textContent = `Upload (${files.length} Dateien)`;
+    $.uploadPanel.classList.remove('hidden');
+    $.uploadPanelTitle.textContent = `Upload (${files.length} Dateien)`;
 
     for (const file of files) {
         const item = { file, progress: 0, status: 'pending', id: crypto.randomUUID() };
@@ -664,7 +658,7 @@ function uploadFiles(fileList) {
 }
 
 function renderUploadItem(item) {
-    const div = document.createElement('div');
+    const div = $.uploadPanelList.create('div');
     div.className = 'upload-item';
     div.id = `upload-${item.id}`;
     div.innerHTML = `
@@ -675,16 +669,15 @@ function renderUploadItem(item) {
         </div>
         <span class="upload-status">0%</span>
     `;
-    elements.uploadPanelList.appendChild(div);
 }
 
 function updateUploadItem(item) {
-    const div = document.getElementById(`upload-${item.id}`);
+    const div = $id(`upload-${item.id}`);
     if (!div) return;
 
-    const statusEl = div.querySelector('.upload-status');
-    const fillEl = div.querySelector('.fill');
-    const iconEl = div.querySelector('.mdi');
+    const statusEl = div.query('.upload-status');
+    const fillEl = div.query('.fill');
+    const iconEl = div.query('.mdi');
 
     if (item.status === 'uploading') {
         fillEl.style.width = `${item.progress}%`;
@@ -706,7 +699,7 @@ function startUpload(item) {
     const formData = new FormData();
     formData.append('files', item.file);
 
-    xhr.upload.addEventListener('progress', (e) => {
+    xhr.upload.on('progress', (e) => {
         if (e.lengthComputable) {
             item.progress = Math.round((e.loaded / e.total) * 100);
             item.status = 'uploading';
@@ -714,7 +707,7 @@ function startUpload(item) {
         }
     });
 
-    xhr.addEventListener('load', () => {
+    xhr.on('load', () => {
         if (xhr.status >= 200 && xhr.status < 300) {
             item.status = 'done';
         } else {
@@ -724,7 +717,7 @@ function startUpload(item) {
         checkAllUploadsComplete();
     });
 
-    xhr.addEventListener('error', () => {
+    xhr.on('error', () => {
         item.status = 'error';
         updateUploadItem(item);
         checkAllUploadsComplete();
@@ -739,7 +732,7 @@ function checkAllUploadsComplete() {
     if (allDone) {
         const ok = uploadQueue.filter((i) => i.status === 'done').length;
         const fail = uploadQueue.filter((i) => i.status === 'error').length;
-        elements.uploadPanelTitle.textContent = `Upload: ${ok} fertig${fail ? `, ${fail} fehlgeschlagen` : ''}`;
+        $.uploadPanelTitle.textContent = `Upload: ${ok} fertig${fail ? `, ${fail} fehlgeschlagen` : ''}`;
         uploadQueue.length = 0;
         loadDirectory(state.currentPath, false);
     }
@@ -757,10 +750,10 @@ function renderBreadcrumb(path) {
             html += `<span class="separator">/</span><a href="#" data-path="${escapeAttr(accumulated)}">${escapeHtml(part)}</a>`;
         }
     }
-    elements.breadcrumb.innerHTML = html;
+    $.breadcrumb.innerHTML = html;
 
-    elements.breadcrumb.querySelectorAll('a').forEach((a) => {
-        a.addEventListener('click', (e) => {
+    $.breadcrumb.queryAll('a').forEach((a) => {
+        a.on('click', (e) => {
             e.preventDefault();
             loadDirectory(a.dataset.path);
         });
@@ -773,10 +766,10 @@ function renderEntries(skipSizeLoad = false) {
     const files = sorted.filter((e) => e.type === 1);
     const all = [...dirs, ...files];
 
-    elements.itemCount.textContent = `${dirs.length} Ordner, ${files.length} Dateien`;
+    $.itemCount.textContent = `${dirs.length} Ordner, ${files.length} Dateien`;
 
     if (all.length === 0 && state.parentPath == null) {
-        elements.fileList.innerHTML = '<div class="empty">Ordner ist leer</div>';
+        $.fileList.innerHTML = '<div class="empty">Ordner ist leer</div>';
         return;
     }
 
@@ -812,10 +805,10 @@ function renderEntries(skipSizeLoad = false) {
             </a>`;
     }
 
-    elements.fileList.innerHTML = html;
+    $.fileList.innerHTML = html;
 
-    elements.fileList.querySelectorAll('.file-entry').forEach((el) => {
-        el.addEventListener('click', (e) => {
+    $.fileList.queryAll('.file-entry').forEach((el) => {
+        el.on('click', (e) => {
             if (e.target.closest('.more-btn')) return;
             e.preventDefault();
             const action = el.dataset.action;
@@ -827,9 +820,9 @@ function renderEntries(skipSizeLoad = false) {
             }
         });
 
-        const moreBtn = el.querySelector('.more-btn');
+        const moreBtn = el.query('.more-btn');
         if (moreBtn) {
-            moreBtn.addEventListener('click', (e) => {
+            moreBtn.on('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 showContextMenu(moreBtn, {
@@ -888,10 +881,10 @@ function updateDirectorySize(path, data) {
     }
 
     // Update DOM
-    const el = document.querySelector(`.file-entry[data-path="${CSS.escape(path)}"]`);
+    const el = query(`.file-entry[data-path="${CSS.escape(path)}"]`);
     if (!el) return;
 
-    const sizeEl = el.querySelector('.size');
+    const sizeEl = el.query('.size');
     if (sizeEl) {
         sizeEl.innerHTML = formatSize(data.size);
         sizeEl.title = `${data.files.toLocaleString('de-DE')} Dateien, ${data.directories.toLocaleString('de-DE')} Ordner`;
@@ -985,7 +978,7 @@ function formatDate(dateStr) {
 // --- Utilities ---
 
 function escapeHtml(str) {
-    const div = document.createElement('div');
+    const div = create('div');
     div.textContent = str;
     return div.innerHTML;
 }
@@ -995,15 +988,15 @@ function escapeAttr(str) {
 }
 
 function showError(message) {
-    elements.errorToast.textContent = message;
-    elements.errorToast.classList.remove('hidden');
-    setTimeout(() => elements.errorToast.classList.add('hidden'), 4000);
+    $.errorToast.textContent = message;
+    $.errorToast.classList.remove('hidden');
+    setTimeout(() => $.errorToast.classList.add('hidden'), 4000);
 }
 
 // --- Battery ---
 
-const batteryIndicator = document.getElementById('battery-indicator');
-const batteryPercentage = document.getElementById('battery-percentage');
+const batteryIndicator = query('#battery-indicator');
+const batteryPercentage = query('#battery-percentage');
 
 async function updateBatteryStatus() {
     try {
@@ -1016,7 +1009,7 @@ async function updateBatteryStatus() {
         batteryPercentage.textContent = `${data.percentage}%`;
 
         // Update icon based on level and charging status
-        const icon = batteryIndicator.querySelector('.mdi');
+        const icon = batteryIndicator.query('.mdi');
         icon.className = 'mdi ' + getBatteryIcon(data.percentage, data.charging);
 
         // Update styling
@@ -1055,17 +1048,17 @@ function navigateTo(page) {
     state.currentPage = page;
 
     // Update page visibility
-    Object.entries(elements.pages).forEach(([key, el]) => {
+    Object.entries($.pages).forEach(([key, el]) => {
         el.classList.toggle('active', key === page);
     });
 
     // Update nav items
-    elements.navItems.forEach((item) => {
+    $.navItems.forEach((item) => {
         item.classList.toggle('active', item.dataset.page === page);
     });
 
     // Update title
-    elements.pageTitle.textContent = PAGE_TITLES[page] || page;
+    $.pageTitle.textContent = PAGE_TITLES[page] || page;
 
     // Load page data if needed
     if (page === 'messages' && !state.smsLoaded) {
@@ -1076,18 +1069,18 @@ function navigateTo(page) {
     }
 }
 
-elements.navItems.forEach((item) => {
-    item.addEventListener('click', () => {
+$.navItems.forEach((item) => {
+    item.on('click', () => {
         navigateTo(item.dataset.page);
     });
 });
 
-elements.btnRefreshSms.addEventListener('click', () => loadSms());
+$.btnRefreshSms.on('click', () => loadSms());
 
 // --- SMS ---
 
 async function loadSms() {
-    elements.smsList.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
+    $.smsList.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
 
     try {
         const res = await fetch('api/system/sms');
@@ -1100,18 +1093,18 @@ async function loadSms() {
         state.smsLoaded = true;
         renderSms(messages);
     } catch (err) {
-        elements.smsList.innerHTML = `<div class="empty">Fehler: ${escapeHtml(err.message)}</div>`;
+        $.smsList.innerHTML = `<div class="empty">Fehler: ${escapeHtml(err.message)}</div>`;
     }
 }
 
 function renderSms(messages) {
     if (!messages || messages.length === 0) {
-        elements.smsList.innerHTML = '<div class="empty">Keine Nachrichten</div>';
-        elements.smsCount.textContent = '0 Nachrichten';
+        $.smsList.innerHTML = '<div class="empty">Keine Nachrichten</div>';
+        $.smsCount.textContent = '0 Nachrichten';
         return;
     }
 
-    elements.smsCount.textContent = `${messages.length} Nachrichten`;
+    $.smsCount.textContent = `${messages.length} Nachrichten`;
 
     let html = '';
     for (const msg of messages) {
@@ -1132,11 +1125,11 @@ function renderSms(messages) {
             </div>`;
     }
 
-    elements.smsList.innerHTML = html;
+    $.smsList.innerHTML = html;
 
     // Toggle expand on click
-    elements.smsList.querySelectorAll('.sms-item').forEach((item) => {
-        item.addEventListener('click', () => {
+    $.smsList.queryAll('.sms-item').forEach((item) => {
+        item.on('click', () => {
             item.classList.toggle('expanded');
         });
     });
@@ -1161,7 +1154,7 @@ function formatSmsDate(dateStr) {
 // --- System Info ---
 
 async function loadSystemInfo() {
-    elements.systemInfo.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
+    $.systemInfo.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
 
     try {
         const res = await fetch('api/system/info');
@@ -1174,7 +1167,7 @@ async function loadSystemInfo() {
         state.systemLoaded = true;
         renderSystemInfo(info);
     } catch (err) {
-        elements.systemInfo.innerHTML = `<div class="empty">Fehler: ${escapeHtml(err.message)}</div>`;
+        $.systemInfo.innerHTML = `<div class="empty">Fehler: ${escapeHtml(err.message)}</div>`;
     }
 }
 
@@ -1335,17 +1328,17 @@ function renderSystemInfo(info) {
             </div>`;
     }
 
-    elements.systemInfo.innerHTML = html || '<div class="empty">Keine Systeminformationen verfügbar</div>';
+    $.systemInfo.innerHTML = html || '<div class="empty">Keine Systeminformationen verfügbar</div>';
 
     // Bind volume slider events
-    elements.systemInfo.querySelectorAll('.volume-slider').forEach(slider => {
-        slider.addEventListener('input', (e) => {
+    $.systemInfo.queryAll('.volume-slider').forEach(slider => {
+        slider.on('input', (e) => {
             const value = e.target.value;
             const stream = e.target.dataset.stream;
-            const valueEl = elements.systemInfo.querySelector(`.volume-value[data-stream="${stream}"]`);
+            const valueEl = $.systemInfo.query(`.volume-value[data-stream="${stream}"]`);
             if (valueEl) valueEl.textContent = value;
         });
-        slider.addEventListener('change', (e) => {
+        slider.on('change', (e) => {
             const value = parseInt(e.target.value, 10);
             const stream = e.target.dataset.stream;
             setVolume(stream, value);
