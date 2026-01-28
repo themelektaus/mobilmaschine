@@ -718,6 +718,41 @@ main {
     tab-size: 4;
 }
 
+.lightbox-body textarea {
+    width: 100%;
+    height: 100%;
+    resize: none;
+    margin: 0;
+    padding: 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre;
+    tab-size: 4;
+    outline: none;
+}
+
+.lightbox-body textarea:focus {
+    border-color: var(--accent);
+}
+
+.lightbox-save-btn {
+    background: var(--accent);
+    color: #fff;
+}
+
+.lightbox-save-btn:hover {
+    background: var(--accent-hover);
+}
+
+.lightbox-save-btn.hidden {
+    display: none;
+}
+
 /* --- Dialog --- */
 
 .dialog-overlay {

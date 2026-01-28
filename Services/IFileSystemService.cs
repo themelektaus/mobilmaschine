@@ -10,6 +10,7 @@ public interface IFileSystemService
     string GetMimeType(string relativePath);
     string ResolvePath(string relativePath);
     Task SaveFileAsync(string directoryPath, string fileName, Stream content);
+    Task WriteTextAsync(string relativePath, string content);
     void Delete(string relativePath);
     void CreateDirectory(string parentPath, string name);
     void CreateFile(string parentPath, string name);

@@ -156,6 +156,16 @@ public class FileSystemService : IFileSystemService
         await content.CopyToAsync(fs);
     }
 
+    public async Task WriteTextAsync(string relativePath, string content)
+    {
+        var fullPath = ResolvePath(relativePath);
+
+        if (!File.Exists(fullPath))
+            throw new FileNotFoundException($"File not found: {relativePath}");
+
+        await File.WriteAllTextAsync(fullPath, content);
+    }
+
     public void Delete(string relativePath)
     {
         var fullPath = ResolvePath(relativePath);

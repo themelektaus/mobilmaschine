@@ -18,6 +18,7 @@ const elements = {
     lightboxTitle: document.getElementById('lightbox-title'),
     lightboxBody: document.getElementById('lightbox-body'),
     lightboxDownload: document.getElementById('lightbox-download'),
+    lightboxSave: document.getElementById('lightbox-save'),
     lightboxClose: document.getElementById('lightbox-close'),
     lightboxBackdrop: document.querySelector('.lightbox-backdrop'),
     dropOverlay: document.getElementById('drop-overlay'),
@@ -272,6 +273,8 @@ async function openLightbox(path, name, previewType) {
 
 function closeLightbox() {
     elements.lightbox.classList.add('hidden');
+    elements.lightboxSave.classList.add('hidden');
+    elements.lightboxSave.onclick = null;
     document.body.style.overflow = '';
     // stop any playing media
     elements.lightboxBody.querySelectorAll('video, audio').forEach((el) => {
@@ -279,6 +282,51 @@ function closeLightbox() {
         el.src = '';
     });
     elements.lightboxBody.innerHTML = '';
+}
+
+// --- Edit ---
+
+async function editFile(path, name) {
+    const url = fileUrl(path);
+    elements.lightboxTitle.textContent = `Bearbeiten: ${name}`;
+    elements.lightboxDownload.href = url;
+    elements.lightboxDownload.download = name;
+    elements.lightboxDownload.style.display = '';
+    elements.lightboxBody.innerHTML = '<pre>Wird geladen...</pre>';
+    elements.lightbox.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.spellcheck = false;
+        elements.lightboxBody.innerHTML = '';
+        elements.lightboxBody.appendChild(textarea);
+
+        elements.lightboxSave.classList.remove('hidden');
+        elements.lightboxSave.onclick = () => saveFile(path, textarea);
+    } catch {
+        elements.lightboxBody.innerHTML = '<pre>Fehler beim Laden der Datei.</pre>';
+    }
+}
+
+async function saveFile(path, textarea) {
+    try {
+        const res = await fetch(`api/files/save?path=${encodeURIComponent(path)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: textarea.value }),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+        }
+        closeLightbox();
+    } catch (err) {
+        showError(err.message);
+    }
 }
 
 // --- Dialog ---
@@ -370,7 +418,9 @@ async function createNew(type, label) {
 
 function showContextMenu(anchor, entry) {
     const isFile = entry.type === 'file';
-    const hasPreview = isFile && getPreviewType(entry.ext) !== null;
+    const previewType = isFile ? getPreviewType(entry.ext) : null;
+    const hasPreview = previewType !== null;
+    const isText = previewType === 'text';
 
     let items = '';
 
@@ -378,6 +428,10 @@ function showContextMenu(anchor, entry) {
         items += `<button class="context-menu-item" data-action="preview"><i class="mdi mdi-eye"></i>Ansicht</button>`;
     } else if (!isFile) {
         items += `<button class="context-menu-item" data-action="open-dir"><i class="mdi mdi-folder-open"></i>Öffnen</button>`;
+    }
+
+    if (isText) {
+        items += `<button class="context-menu-item" data-action="edit"><i class="mdi mdi-pencil"></i>Bearbeiten</button>`;
     }
 
     if (isFile) {
@@ -427,6 +481,9 @@ function handleContextAction(action, entry) {
             break;
         case 'open-dir':
             loadDirectory(entry.path);
+            break;
+        case 'edit':
+            editFile(entry.path, entry.name);
             break;
         case 'download':
             downloadFile(entry.path);

@@ -225,6 +225,24 @@ public class FilesController(IFileSystemService fileSystem) : ControllerBase
         }
     }
 
+    [HttpPost("save")]
+    public async Task<IActionResult> Save([FromQuery] string path, [FromBody] SaveRequest request)
+    {
+        try
+        {
+            await _fileSystem.WriteTextAsync(path, request.Content);
+            return Ok(new { saved = path });
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound(new { error = "File not found." });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { error = ex.Message });
+        }
+    }
+
     [HttpGet("info")]
     public IActionResult Info([FromQuery] string path)
     {
@@ -243,3 +261,5 @@ public class FilesController(IFileSystemService fileSystem) : ControllerBase
         }
     }
 }
+
+public record SaveRequest(string Content);
