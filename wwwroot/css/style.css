@@ -124,14 +124,97 @@ main {
     font-size: 18px;
 }
 
-.sort-controls select {
+/* --- Custom Select --- */
+
+.custom-select {
+    position: relative;
+    min-width: 180px;
+    user-select: none;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 32px;
     background: var(--bg-surface);
-    color: var(--text);
+    color: var(--text-muted);
     border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 4px 8px;
+    border-radius: 6px;
+    padding: 0 10px;
     font-size: 13px;
     cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.custom-select-trigger:hover {
+    background: var(--bg-hover);
+    color: var(--text);
+}
+
+.custom-select.open .custom-select-trigger {
+    background: var(--bg-hover);
+    color: var(--text);
+}
+
+.custom-select-trigger .mdi {
+    font-size: 18px;
+    color: inherit;
+    transition: transform 0.2s;
+}
+
+.custom-select.open .custom-select-trigger .mdi {
+    transform: rotate(180deg);
+}
+
+.custom-select-value {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    max-height: 280px;
+    overflow-y: auto;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.custom-select-dropdown.hidden {
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+}
+
+.custom-select-option {
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.custom-select-option:hover {
+    background: var(--bg-hover);
+}
+
+.custom-select-option.selected {
+    background: rgba(108, 140, 255, 0.15);
+    color: var(--accent);
+    font-weight: 500;
 }
 
 .file-list {

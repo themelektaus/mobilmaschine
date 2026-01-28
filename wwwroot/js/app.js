@@ -7,7 +7,10 @@ const state = {
 const elements = {
     fileList: document.getElementById('file-list'),
     breadcrumb: document.getElementById('breadcrumb'),
-    sortSelect: document.getElementById('sort-select'),
+    customSelect: document.getElementById('custom-select'),
+    customSelectTrigger: document.querySelector('.custom-select-trigger'),
+    customSelectValue: document.querySelector('.custom-select-value'),
+    customSelectDropdown: document.querySelector('.custom-select-dropdown'),
     itemCount: document.getElementById('item-count'),
     errorToast: document.getElementById('error-toast'),
     lightbox: document.getElementById('lightbox'),
@@ -56,10 +59,53 @@ function getPreviewType(ext) {
 
 // --- Initialization ---
 
-elements.sortSelect.addEventListener('change', (e) => {
-    state.sortBy = e.target.value;
-    renderEntries();
+// Custom Select
+elements.customSelectTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = elements.customSelect.classList.contains('open');
+    if (isOpen) {
+        closeCustomSelect();
+    } else {
+        openCustomSelect();
+    }
 });
+
+elements.customSelectDropdown.querySelectorAll('.custom-select-option').forEach((option) => {
+    option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const value = option.dataset.value;
+        const text = option.textContent;
+
+        // Update state
+        state.sortBy = value;
+
+        // Update UI
+        elements.customSelectValue.textContent = text;
+
+        // Update selected styling
+        elements.customSelectDropdown.querySelectorAll('.custom-select-option').forEach((opt) => {
+            opt.classList.remove('selected');
+        });
+        option.classList.add('selected');
+
+        // Close dropdown and re-render
+        closeCustomSelect();
+        renderEntries();
+    });
+});
+
+function openCustomSelect() {
+    elements.customSelect.classList.add('open');
+    elements.customSelectDropdown.classList.remove('hidden');
+}
+
+function closeCustomSelect() {
+    elements.customSelect.classList.remove('open');
+    elements.customSelectDropdown.classList.add('hidden');
+}
+
+// Initialize first option as selected
+elements.customSelectDropdown.querySelector('.custom-select-option').classList.add('selected');
 
 window.addEventListener('popstate', (e) => {
     const path = e.state?.path ?? '';
@@ -74,6 +120,8 @@ document.addEventListener('keydown', (e) => {
             closeDialog(null);
         } else if (!elements.contextMenu.classList.contains('hidden')) {
             closeContextMenu();
+        } else if (elements.customSelect.classList.contains('open')) {
+            closeCustomSelect();
         } else if (!elements.lightbox.classList.contains('hidden')) {
             closeLightbox();
         }
@@ -83,6 +131,9 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('click', (e) => {
     if (!elements.contextMenu.contains(e.target) && !e.target.closest('.more-btn')) {
         closeContextMenu();
+    }
+    if (!elements.customSelect.contains(e.target)) {
+        closeCustomSelect();
     }
 });
 
