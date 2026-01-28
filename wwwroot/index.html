@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobilmaschine - Dateibrowser</title>
+    <title>Mobilmaschine</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/materialdesignicons.min.css">
 </head>
 <body>
     <header>
         <div class="header-inner">
-            <h1>Mobilmaschine</h1>
+            <h1 id="page-title">Dateien</h1>
             <div id="battery-indicator" class="battery-indicator hidden">
                 <i class="mdi mdi-battery"></i>
                 <span id="battery-percentage"></span>
@@ -18,48 +18,93 @@
         </div>
     </header>
 
-    <nav class="breadcrumb">
-        <div id="breadcrumb" class="breadcrumb-inner">
-            <a href="#" data-path="">Speicher</a>
-        </div>
-    </nav>
+    <!-- Page: Dateien -->
+    <div id="page-files" class="page active">
+        <nav class="breadcrumb">
+            <div id="breadcrumb" class="breadcrumb-inner">
+                <a href="#" data-path="">Speicher</a>
+            </div>
+        </nav>
 
-    <main>
-        <div id="toolbar" class="toolbar">
-            <span id="item-count" class="item-count"></span>
-            <div class="toolbar-actions">
-                <button id="btn-new-folder" class="toolbar-btn" title="Neuer Ordner">
-                    <i class="mdi mdi-folder-plus"></i>
-                </button>
-                <button id="btn-new-file" class="toolbar-btn" title="Neue Datei">
-                    <i class="mdi mdi-file-plus"></i>
-                </button>
-                <button id="btn-paste" class="toolbar-btn" title="Einfügen" disabled>
-                    <i class="mdi mdi-content-paste"></i>
-                </button>
-                <div class="sort-controls">
-                    <div id="custom-select" class="custom-select">
-                        <div class="custom-select-trigger">
-                            <span class="custom-select-value">Name A-Z</span>
-                            <i class="mdi mdi-chevron-down"></i>
-                        </div>
-                        <div class="custom-select-dropdown hidden">
-                            <div class="custom-select-option" data-value="name-asc">Name A-Z</div>
-                            <div class="custom-select-option" data-value="name-desc">Name Z-A</div>
-                            <div class="custom-select-option" data-value="date-desc">Datum (neueste)</div>
-                            <div class="custom-select-option" data-value="date-asc">Datum (aelteste)</div>
-                            <div class="custom-select-option" data-value="size-desc">Groesse (absteigend)</div>
-                            <div class="custom-select-option" data-value="size-asc">Groesse (aufsteigend)</div>
+        <main>
+            <div id="toolbar" class="toolbar">
+                <span id="item-count" class="item-count"></span>
+                <div class="toolbar-actions">
+                    <button id="btn-new-folder" class="toolbar-btn" title="Neuer Ordner">
+                        <i class="mdi mdi-folder-plus"></i>
+                    </button>
+                    <button id="btn-new-file" class="toolbar-btn" title="Neue Datei">
+                        <i class="mdi mdi-file-plus"></i>
+                    </button>
+                    <button id="btn-paste" class="toolbar-btn" title="Einfügen" disabled>
+                        <i class="mdi mdi-content-paste"></i>
+                    </button>
+                    <div class="sort-controls">
+                        <div id="custom-select" class="custom-select">
+                            <div class="custom-select-trigger">
+                                <span class="custom-select-value">Name A-Z</span>
+                                <i class="mdi mdi-chevron-down"></i>
+                            </div>
+                            <div class="custom-select-dropdown hidden">
+                                <div class="custom-select-option" data-value="name-asc">Name A-Z</div>
+                                <div class="custom-select-option" data-value="name-desc">Name Z-A</div>
+                                <div class="custom-select-option" data-value="date-desc">Datum (neueste)</div>
+                                <div class="custom-select-option" data-value="date-asc">Datum (aelteste)</div>
+                                <div class="custom-select-option" data-value="size-desc">Groesse (absteigend)</div>
+                                <div class="custom-select-option" data-value="size-asc">Groesse (aufsteigend)</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="file-list" class="file-list">
-            <div class="loading">Wird geladen...</div>
-        </div>
-    </main>
+            <div id="file-list" class="file-list">
+                <div class="loading">Wird geladen...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Page: Nachrichten -->
+    <div id="page-messages" class="page">
+        <main>
+            <div class="toolbar">
+                <span id="sms-count" class="item-count"></span>
+                <div class="toolbar-actions">
+                    <button id="btn-refresh-sms" class="toolbar-btn" title="Aktualisieren">
+                        <i class="mdi mdi-refresh"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="sms-list" class="sms-list">
+                <div class="loading">Wird geladen...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Page: System -->
+    <div id="page-system" class="page">
+        <main>
+            <div id="system-info" class="system-info">
+                <div class="loading">Wird geladen...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-page="files">
+            <i class="mdi mdi-folder"></i>
+            <span>Dateien</span>
+        </button>
+        <button class="nav-item" data-page="messages">
+            <i class="mdi mdi-message-text"></i>
+            <span>Nachrichten</span>
+        </button>
+        <button class="nav-item" data-page="system">
+            <i class="mdi mdi-information"></i>
+            <span>System</span>
+        </button>
+    </nav>
 
     <div id="context-menu" class="context-menu hidden"></div>
 

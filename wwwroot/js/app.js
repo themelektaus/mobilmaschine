@@ -1,11 +1,29 @@
 const state = {
+    currentPage: 'files',
     currentPath: '',
     entries: [],
     sortBy: 'name-asc',
     clipboard: null,
+    smsLoaded: false,
+    systemLoaded: false,
+};
+
+const PAGE_TITLES = {
+    files: 'Dateien',
+    messages: 'Nachrichten',
+    system: 'System',
 };
 
 const elements = {
+    // Navigation
+    pageTitle: document.getElementById('page-title'),
+    pages: {
+        files: document.getElementById('page-files'),
+        messages: document.getElementById('page-messages'),
+        system: document.getElementById('page-system'),
+    },
+    navItems: document.querySelectorAll('.nav-item'),
+    // Files
     fileList: document.getElementById('file-list'),
     breadcrumb: document.getElementById('breadcrumb'),
     customSelect: document.getElementById('custom-select'),
@@ -37,6 +55,12 @@ const elements = {
     dialogInput: document.getElementById('dialog-input'),
     dialogCancel: document.getElementById('dialog-cancel'),
     dialogConfirm: document.getElementById('dialog-confirm'),
+    // SMS
+    smsList: document.getElementById('sms-list'),
+    smsCount: document.getElementById('sms-count'),
+    btnRefreshSms: document.getElementById('btn-refresh-sms'),
+    // System
+    systemInfo: document.getElementById('system-info'),
 };
 
 const PREVIEW_TYPES = {
@@ -971,3 +995,260 @@ function getBatteryIcon(percentage, charging) {
 // Initial load and periodic update
 updateBatteryStatus();
 setInterval(updateBatteryStatus, 30000);
+
+// --- Navigation ---
+
+function navigateTo(page) {
+    state.currentPage = page;
+
+    // Update page visibility
+    Object.entries(elements.pages).forEach(([key, el]) => {
+        el.classList.toggle('active', key === page);
+    });
+
+    // Update nav items
+    elements.navItems.forEach((item) => {
+        item.classList.toggle('active', item.dataset.page === page);
+    });
+
+    // Update title
+    elements.pageTitle.textContent = PAGE_TITLES[page] || page;
+
+    // Load page data if needed
+    if (page === 'messages' && !state.smsLoaded) {
+        loadSms();
+    }
+    if (page === 'system' && !state.systemLoaded) {
+        loadSystemInfo();
+    }
+}
+
+elements.navItems.forEach((item) => {
+    item.addEventListener('click', () => {
+        navigateTo(item.dataset.page);
+    });
+});
+
+elements.btnRefreshSms.addEventListener('click', () => loadSms());
+
+// --- SMS ---
+
+async function loadSms() {
+    elements.smsList.innerHTML = '<div class="loading">Wird geladen...</div>';
+
+    try {
+        const res = await fetch('api/system/sms');
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+        }
+
+        const messages = await res.json();
+        state.smsLoaded = true;
+        renderSms(messages);
+    } catch (err) {
+        elements.smsList.innerHTML = `<div class="empty">Fehler: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+function renderSms(messages) {
+    if (!messages || messages.length === 0) {
+        elements.smsList.innerHTML = '<div class="empty">Keine Nachrichten</div>';
+        elements.smsCount.textContent = '0 Nachrichten';
+        return;
+    }
+
+    elements.smsCount.textContent = `${messages.length} Nachrichten`;
+
+    let html = '';
+    for (const msg of messages) {
+        const isInbox = msg.type === 'inbox';
+        const date = formatSmsDate(msg.received || msg.date);
+
+        html += `
+            <div class="sms-item" data-id="${msg.threadid || ''}">
+                <div class="sms-header">
+                    <div class="sms-sender">
+                        <i class="mdi ${isInbox ? 'mdi-arrow-down-bold' : 'mdi-arrow-up-bold'}"></i>
+                        ${escapeHtml(msg.number || 'Unbekannt')}
+                    </div>
+                    <span class="sms-type ${isInbox ? 'inbox' : 'sent'}">${isInbox ? 'Empfangen' : 'Gesendet'}</span>
+                </div>
+                <div class="sms-date">${date}</div>
+                <div class="sms-body">${escapeHtml(msg.body || '')}</div>
+            </div>`;
+    }
+
+    elements.smsList.innerHTML = html;
+
+    // Toggle expand on click
+    elements.smsList.querySelectorAll('.sms-item').forEach((item) => {
+        item.addEventListener('click', () => {
+            item.classList.toggle('expanded');
+        });
+    });
+}
+
+function formatSmsDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+        return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays === 1) {
+        return 'Gestern ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays < 7) {
+        return d.toLocaleDateString('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+// --- System Info ---
+
+async function loadSystemInfo() {
+    elements.systemInfo.innerHTML = '<div class="loading">Wird geladen...</div>';
+
+    try {
+        const res = await fetch('api/system/info');
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+        }
+
+        const info = await res.json();
+        state.systemLoaded = true;
+        renderSystemInfo(info);
+    } catch (err) {
+        elements.systemInfo.innerHTML = `<div class="empty">Fehler: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+function renderSystemInfo(info) {
+    let html = '';
+
+    // Device Info
+    if (info.device) {
+        html += `
+            <div class="system-card">
+                <div class="system-card-header">
+                    <i class="mdi mdi-cellphone"></i>
+                    Gerät
+                </div>
+                <div class="system-card-body">
+                    ${info.device.manufacturer ? `<div class="system-row"><span class="label">Hersteller</span><span class="value">${escapeHtml(info.device.manufacturer)}</span></div>` : ''}
+                    ${info.device.model ? `<div class="system-row"><span class="label">Modell</span><span class="value">${escapeHtml(info.device.model)}</span></div>` : ''}
+                    ${info.device.device ? `<div class="system-row"><span class="label">Gerätename</span><span class="value">${escapeHtml(info.device.device)}</span></div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    // Android Info
+    if (info.android) {
+        html += `
+            <div class="system-card">
+                <div class="system-card-header">
+                    <i class="mdi mdi-android"></i>
+                    Android
+                </div>
+                <div class="system-card-body">
+                    ${info.android.release ? `<div class="system-row"><span class="label">Version</span><span class="value">Android ${escapeHtml(info.android.release)}</span></div>` : ''}
+                    ${info.android.sdk ? `<div class="system-row"><span class="label">API Level</span><span class="value">${escapeHtml(info.android.sdk)}</span></div>` : ''}
+                    ${info.android.id ? `<div class="system-row"><span class="label">Build ID</span><span class="value">${escapeHtml(info.android.id)}</span></div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    // Battery Info
+    if (info.battery) {
+        const percentage = info.battery.percentage || 0;
+        const batteryClass = percentage > 50 ? 'good' : percentage > 20 ? 'warning' : 'danger';
+
+        html += `
+            <div class="system-card">
+                <div class="system-card-header">
+                    <i class="mdi mdi-battery"></i>
+                    Akku
+                </div>
+                <div class="system-card-body">
+                    <div class="system-row">
+                        <span class="label">Ladestand</span>
+                        <span class="value ${batteryClass}">${percentage}%</span>
+                    </div>
+                    <div class="progress-bar"><div class="fill ${batteryClass}" style="width: ${percentage}%"></div></div>
+                    ${info.battery.status ? `<div class="system-row"><span class="label">Status</span><span class="value">${escapeHtml(translateBatteryStatus(info.battery.status))}</span></div>` : ''}
+                    ${info.battery.health ? `<div class="system-row"><span class="label">Zustand</span><span class="value">${escapeHtml(translateBatteryHealth(info.battery.health))}</span></div>` : ''}
+                    ${info.battery.temperature != null ? `<div class="system-row"><span class="label">Temperatur</span><span class="value">${(info.battery.temperature / 10).toFixed(1)}°C</span></div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    // Storage Info
+    if (info.storage) {
+        const usedPercent = info.storage.total > 0 ? Math.round((info.storage.used / info.storage.total) * 100) : 0;
+        const storageClass = usedPercent < 80 ? 'good' : usedPercent < 95 ? 'warning' : 'danger';
+
+        html += `
+            <div class="system-card">
+                <div class="system-card-header">
+                    <i class="mdi mdi-harddisk"></i>
+                    Speicher
+                </div>
+                <div class="system-card-body">
+                    <div class="system-row">
+                        <span class="label">Verwendet</span>
+                        <span class="value">${formatSize(info.storage.used)} / ${formatSize(info.storage.total)}</span>
+                    </div>
+                    <div class="progress-bar"><div class="fill ${storageClass}" style="width: ${usedPercent}%"></div></div>
+                    <div class="system-row">
+                        <span class="label">Frei</span>
+                        <span class="value ${storageClass}">${formatSize(info.storage.free)}</span>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // Network Info
+    if (info.wifi) {
+        html += `
+            <div class="system-card">
+                <div class="system-card-header">
+                    <i class="mdi mdi-wifi"></i>
+                    WLAN
+                </div>
+                <div class="system-card-body">
+                    ${info.wifi.ssid ? `<div class="system-row"><span class="label">Netzwerk</span><span class="value">${escapeHtml(info.wifi.ssid)}</span></div>` : ''}
+                    ${info.wifi.link_speed_mbps ? `<div class="system-row"><span class="label">Geschwindigkeit</span><span class="value">${info.wifi.link_speed_mbps} Mbps</span></div>` : ''}
+                    ${info.wifi.rssi != null ? `<div class="system-row"><span class="label">Signal</span><span class="value">${info.wifi.rssi} dBm</span></div>` : ''}
+                    ${info.wifi.ip ? `<div class="system-row"><span class="label">IP-Adresse</span><span class="value">${escapeHtml(info.wifi.ip)}</span></div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    elements.systemInfo.innerHTML = html || '<div class="empty">Keine Systeminformationen verfügbar</div>';
+}
+
+function translateBatteryStatus(status) {
+    const map = {
+        'CHARGING': 'Wird geladen',
+        'DISCHARGING': 'Entlädt',
+        'FULL': 'Voll',
+        'NOT_CHARGING': 'Lädt nicht',
+        'UNKNOWN': 'Unbekannt',
+    };
+    return map[status] || status;
+}
+
+function translateBatteryHealth(health) {
+    const map = {
+        'GOOD': 'Gut',
+        'OVERHEAT': 'Überhitzt',
+        'DEAD': 'Defekt',
+        'OVER_VOLTAGE': 'Überspannung',
+        'UNSPECIFIED_FAILURE': 'Fehler',
+        'COLD': 'Zu kalt',
+        'UNKNOWN': 'Unbekannt',
+    };
+    return map[health] || health;
+}
