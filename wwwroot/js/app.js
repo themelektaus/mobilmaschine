@@ -1263,17 +1263,46 @@ function renderSystemInfo(info) {
                 </div>
                 <div class="system-card-body">
                     ${info.volume.map(v => `
-                        <div class="system-row">
-                            <span class="label">${escapeHtml(translateVolumeStream(v.stream))}</span>
-                            <span class="value">${v.volume} / ${v.max_volume}</span>
+                        <div class="volume-row">
+                            <span class="volume-label">${escapeHtml(translateVolumeStream(v.stream))}</span>
+                            <input type="range" class="volume-slider" data-stream="${escapeAttr(v.stream)}" min="0" max="${v.max_volume}" value="${v.volume}">
+                            <span class="volume-value" data-stream="${escapeAttr(v.stream)}">${v.volume}</span>
                         </div>
-                        <div class="progress-bar small"><div class="fill" style="width: ${Math.round((v.volume / v.max_volume) * 100)}%"></div></div>
                     `).join('')}
                 </div>
             </div>`;
     }
 
     elements.systemInfo.innerHTML = html || '<div class="empty">Keine Systeminformationen verfügbar</div>';
+
+    // Bind volume slider events
+    elements.systemInfo.querySelectorAll('.volume-slider').forEach(slider => {
+        slider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            const stream = e.target.dataset.stream;
+            const valueEl = elements.systemInfo.querySelector(`.volume-value[data-stream="${stream}"]`);
+            if (valueEl) valueEl.textContent = value;
+        });
+        slider.addEventListener('change', (e) => {
+            const value = parseInt(e.target.value, 10);
+            const stream = e.target.dataset.stream;
+            setVolume(stream, value);
+        });
+    });
+}
+
+async function setVolume(stream, volume) {
+    try {
+        const res = await fetch(`api/system/volume?stream=${encodeURIComponent(stream)}&volume=${volume}`, {
+            method: 'POST',
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+        }
+    } catch (err) {
+        showError(`Lautstärke konnte nicht geändert werden: ${err.message}`);
+    }
 }
 
 function translateBatteryStatus(status) {

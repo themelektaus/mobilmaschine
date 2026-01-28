@@ -172,6 +172,22 @@ public class SystemController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("volume")]
+    public async Task<IActionResult> SetVolume([FromQuery] string stream, [FromQuery] int volume)
+    {
+        if (string.IsNullOrEmpty(stream))
+            return BadRequest(new { error = "Stream parameter required" });
+
+        if (volume < 0)
+            return BadRequest(new { error = "Volume must be >= 0" });
+
+        var (success, _) = await RunTermuxCommand("termux-volume", $"{stream} {volume}");
+        if (!success)
+            return NotFound(new { error = "Could not set volume" });
+
+        return Ok(new { stream, volume });
+    }
+
     private static async Task<(bool success, string output)> RunTermuxCommand(string command, string args = "")
     {
         var fullPath = Path.Combine(TermuxBin, command);

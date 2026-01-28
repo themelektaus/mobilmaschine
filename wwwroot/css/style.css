@@ -1195,6 +1195,62 @@ main {
     word-break: break-all;
 }
 
+/* --- Volume Slider --- */
+
+.volume-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.volume-row:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+}
+
+.volume-label {
+    flex: 0 0 120px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.volume-slider {
+    flex: 1;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.volume-value {
+    flex: 0 0 24px;
+    text-align: right;
+    font-size: 13px;
+    color: var(--text);
+}
+
 @media (max-width: 600px) {
     main {
         padding: 8px;
