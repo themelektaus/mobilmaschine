@@ -922,3 +922,52 @@ function showError(message) {
     elements.errorToast.classList.remove('hidden');
     setTimeout(() => elements.errorToast.classList.add('hidden'), 4000);
 }
+
+// --- Battery ---
+
+const batteryIndicator = document.getElementById('battery-indicator');
+const batteryPercentage = document.getElementById('battery-percentage');
+
+async function updateBatteryStatus() {
+    try {
+        const res = await fetch('api/system/battery');
+        if (!res.ok) return;
+
+        const data = await res.json();
+        batteryIndicator.classList.remove('hidden');
+
+        batteryPercentage.textContent = `${data.percentage}%`;
+
+        // Update icon based on level and charging status
+        const icon = batteryIndicator.querySelector('.mdi');
+        icon.className = 'mdi ' + getBatteryIcon(data.percentage, data.charging);
+
+        // Update styling
+        batteryIndicator.classList.toggle('charging', data.charging);
+        batteryIndicator.classList.toggle('low', data.percentage <= 20 && !data.charging);
+    } catch {
+        // Battery info not available, keep hidden
+    }
+}
+
+function getBatteryIcon(percentage, charging) {
+    if (charging) {
+        if (percentage >= 90) return 'mdi-battery-charging-100';
+        if (percentage >= 80) return 'mdi-battery-charging-80';
+        if (percentage >= 60) return 'mdi-battery-charging-60';
+        if (percentage >= 40) return 'mdi-battery-charging-40';
+        if (percentage >= 20) return 'mdi-battery-charging-20';
+        return 'mdi-battery-charging-10';
+    }
+    if (percentage >= 90) return 'mdi-battery';
+    if (percentage >= 80) return 'mdi-battery-80';
+    if (percentage >= 60) return 'mdi-battery-60';
+    if (percentage >= 40) return 'mdi-battery-40';
+    if (percentage >= 20) return 'mdi-battery-20';
+    if (percentage >= 10) return 'mdi-battery-10';
+    return 'mdi-battery-alert';
+}
+
+// Initial load and periodic update
+updateBatteryStatus();
+setInterval(updateBatteryStatus, 30000);

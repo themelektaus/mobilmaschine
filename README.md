@@ -73,6 +73,7 @@ Mobilmaschine/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/api/system/battery` | Get battery status (Android/Linux) |
 | GET | `/api/files` | List directory contents |
 | GET | `/api/files/download` | Download a file |
 | GET | `/api/files/info` | Get file/folder metadata |
