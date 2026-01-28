@@ -246,6 +246,95 @@ public class FileSystemService : IFileSystemService
             throw new FileNotFoundException($"Not found: {relativePath}");
     }
 
+    public void Copy(string sourcePath, string destinationDir)
+    {
+        var srcFull = ResolvePath(sourcePath);
+        var dstDirFull = ResolvePath(destinationDir);
+
+        if (!Directory.Exists(dstDirFull))
+            throw new DirectoryNotFoundException($"Directory not found: {destinationDir}");
+
+        var name = Path.GetFileName(srcFull);
+        var targetPath = Path.Combine(dstDirFull, name);
+
+        if (!targetPath.StartsWith(_rootPath, StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException("Access denied: path is outside root.");
+
+        targetPath = GetUniquePath(targetPath);
+
+        if (File.Exists(srcFull))
+        {
+            File.Copy(srcFull, targetPath);
+        }
+        else if (Directory.Exists(srcFull))
+        {
+            CopyDirectoryRecursive(new DirectoryInfo(srcFull), new DirectoryInfo(targetPath));
+        }
+        else
+        {
+            throw new FileNotFoundException($"Not found: {sourcePath}");
+        }
+    }
+
+    static void CopyDirectoryRecursive(DirectoryInfo source, DirectoryInfo target)
+    {
+        target.Create();
+
+        foreach (var file in source.EnumerateFiles())
+            file.CopyTo(Path.Combine(target.FullName, file.Name));
+
+        foreach (var dir in source.EnumerateDirectories())
+            CopyDirectoryRecursive(dir, new DirectoryInfo(Path.Combine(target.FullName, dir.Name)));
+    }
+
+    public void Move(string sourcePath, string destinationDir)
+    {
+        var srcFull = ResolvePath(sourcePath);
+        var dstDirFull = ResolvePath(destinationDir);
+
+        if (srcFull == _rootPath)
+            throw new UnauthorizedAccessException("Cannot move root directory.");
+
+        if (!Directory.Exists(dstDirFull))
+            throw new DirectoryNotFoundException($"Directory not found: {destinationDir}");
+
+        var name = Path.GetFileName(srcFull);
+        var targetPath = Path.Combine(dstDirFull, name);
+
+        if (!targetPath.StartsWith(_rootPath, StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException("Access denied: path is outside root.");
+
+        if (File.Exists(targetPath) || Directory.Exists(targetPath))
+            throw new IOException($"Already exists: {name}");
+
+        if (Directory.Exists(srcFull) && dstDirFull.StartsWith(srcFull, StringComparison.OrdinalIgnoreCase))
+            throw new IOException("Cannot move a directory into itself.");
+
+        if (File.Exists(srcFull))
+            File.Move(srcFull, targetPath);
+        else if (Directory.Exists(srcFull))
+            Directory.Move(srcFull, targetPath);
+        else
+            throw new FileNotFoundException($"Not found: {sourcePath}");
+    }
+
+    static string GetUniquePath(string path)
+    {
+        if (!File.Exists(path) && !Directory.Exists(path))
+            return path;
+
+        var dir = Path.GetDirectoryName(path)!;
+        var nameWithoutExt = Path.GetFileNameWithoutExtension(path);
+        var ext = Path.GetExtension(path);
+
+        for (var i = 1; ; i++)
+        {
+            var candidate = Path.Combine(dir, $"{nameWithoutExt} ({i}){ext}");
+            if (!File.Exists(candidate) && !Directory.Exists(candidate))
+                return candidate;
+        }
+    }
+
     string GetRelativePath(string fullPath)
     {
         return Path.GetRelativePath(_rootPath, fullPath).Replace('\\', '/');

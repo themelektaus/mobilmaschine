@@ -173,6 +173,58 @@ public class FilesController(IFileSystemService fileSystem) : ControllerBase
         }
     }
 
+    [HttpPost("copy")]
+    public IActionResult Copy([FromQuery] string source, [FromQuery] string destination)
+    {
+        try
+        {
+            _fileSystem.Copy(source, destination);
+            return Ok(new { copied = source });
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound(new { error = "Not found." });
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return NotFound(new { error = "Directory not found." });
+        }
+        catch (IOException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("move")]
+    public IActionResult Move([FromQuery] string source, [FromQuery] string destination)
+    {
+        try
+        {
+            _fileSystem.Move(source, destination);
+            return Ok(new { moved = source });
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound(new { error = "Not found." });
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return NotFound(new { error = "Directory not found." });
+        }
+        catch (IOException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { error = ex.Message });
+        }
+    }
+
     [HttpGet("info")]
     public IActionResult Info([FromQuery] string path)
     {

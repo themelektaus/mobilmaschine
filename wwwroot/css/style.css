@@ -124,6 +124,12 @@ main {
     font-size: 18px;
 }
 
+.toolbar-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+}
+
 /* --- Custom Select --- */
 
 .custom-select {

@@ -2,6 +2,7 @@ const state = {
     currentPath: '',
     entries: [],
     sortBy: 'name-asc',
+    clipboard: null,
 };
 
 const elements = {
@@ -27,6 +28,7 @@ const elements = {
     contextMenu: document.getElementById('context-menu'),
     btnNewFolder: document.getElementById('btn-new-folder'),
     btnNewFile: document.getElementById('btn-new-file'),
+    btnPaste: document.getElementById('btn-paste'),
     dialogOverlay: document.getElementById('dialog-overlay'),
     dialogBackdrop: document.querySelector('.dialog-backdrop'),
     dialogTitle: document.getElementById('dialog-title'),
@@ -177,6 +179,7 @@ elements.uploadPanelClose.addEventListener('click', () => {
 
 elements.btnNewFolder.addEventListener('click', () => createNew('mkdir', 'Neuer Ordner'));
 elements.btnNewFile.addEventListener('click', () => createNew('touch', 'Neue Datei'));
+elements.btnPaste.addEventListener('click', () => pasteEntry());
 
 loadDirectory('');
 
@@ -381,8 +384,12 @@ function showContextMenu(anchor, entry) {
         items += `<button class="context-menu-item" data-action="download"><i class="mdi mdi-download"></i>Herunterladen</button>`;
     }
 
-    items += `<button class="context-menu-item" data-action="rename"><i class="mdi mdi-rename-box"></i>Umbenennen</button>`;
+    items += `<div class="context-menu-divider"></div>`;
     items += `<button class="context-menu-item" data-action="info"><i class="mdi mdi-information-outline"></i>Info</button>`;
+    items += `<div class="context-menu-divider"></div>`;
+    items += `<button class="context-menu-item" data-action="rename"><i class="mdi mdi-rename"></i>Umbenennen</button>`;
+    items += `<button class="context-menu-item" data-action="cut"><i class="mdi mdi-content-cut"></i>Ausschneiden</button>`;
+    items += `<button class="context-menu-item" data-action="copy"><i class="mdi mdi-content-copy"></i>Kopieren</button>`;
     items += `<div class="context-menu-divider"></div>`;
     items += `<button class="context-menu-item danger" data-action="delete"><i class="mdi mdi-delete"></i>Löschen</button>`;
 
@@ -426,6 +433,12 @@ function handleContextAction(action, entry) {
             break;
         case 'rename':
             renameEntry(entry.path, entry.name, entry.type);
+            break;
+        case 'cut':
+            setClipboard('cut', entry);
+            break;
+        case 'copy':
+            setClipboard('copy', entry);
             break;
         case 'info':
             showFileInfo(entry.path);
@@ -508,6 +521,47 @@ async function confirmDelete(path, name, type) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.error || `HTTP ${res.status}`);
         }
+        loadDirectory(state.currentPath, false);
+    } catch (err) {
+        showError(err.message);
+    }
+}
+
+// --- Clipboard ---
+
+function setClipboard(operation, entry) {
+    state.clipboard = { operation, path: entry.path, name: entry.name, type: entry.type };
+    updatePasteButton();
+}
+
+function updatePasteButton() {
+    if (state.clipboard) {
+        elements.btnPaste.disabled = false;
+        const label = state.clipboard.operation === 'cut' ? 'Einfügen (Verschieben)' : 'Einfügen (Kopie)';
+        elements.btnPaste.title = `${label}: ${state.clipboard.name}`;
+    } else {
+        elements.btnPaste.disabled = true;
+        elements.btnPaste.title = 'Einfügen';
+    }
+}
+
+async function pasteEntry() {
+    if (!state.clipboard) return;
+
+    const { operation, path, name } = state.clipboard;
+    const endpoint = operation === 'cut' ? 'move' : 'copy';
+
+    try {
+        const res = await fetch(
+            `api/files/${endpoint}?source=${encodeURIComponent(path)}&destination=${encodeURIComponent(state.currentPath)}`,
+            { method: 'POST' }
+        );
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+        }
+        state.clipboard = null;
+        updatePasteButton();
         loadDirectory(state.currentPath, false);
     } catch (err) {
         showError(err.message);
