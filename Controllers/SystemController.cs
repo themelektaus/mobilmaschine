@@ -77,11 +77,24 @@ public class SystemController : ControllerBase
             device = devOk ? device.Trim() : "",
         };
 
+        var (abiOk, cpuAbi) = await RunCommand("getprop", "ro.product.cpu.abi");
+        var (hardwareOk, hardware) = await RunCommand("getprop", "ro.hardware");
+        var (platformOk, platform) = await RunCommand("getprop", "ro.board.platform");
+        var (fingerprintOk, fingerprint) = await RunCommand("getprop", "ro.build.fingerprint");
+
         result["android"] = new
         {
             release = relOk ? androidRelease.Trim() : "",
             sdk = sdkOk ? androidSdk.Trim() : "",
             id = idOk ? buildId.Trim() : "",
+            fingerprint = fingerprintOk ? fingerprint.Trim() : "",
+        };
+
+        result["hardware"] = new
+        {
+            cpu = abiOk ? cpuAbi.Trim() : "",
+            hardware = hardwareOk ? hardware.Trim() : "",
+            platform = platformOk ? platform.Trim() : "",
         };
 
         // Battery
@@ -108,6 +121,18 @@ public class SystemController : ControllerBase
             catch { }
         }
 
+        // Telephony
+        var (telOk, telInfo) = await RunTermuxCommand("termux-telephony-deviceinfo");
+        if (telOk)
+        {
+            try
+            {
+                var json = JsonDocument.Parse(telInfo);
+                result["telephony"] = json.RootElement;
+            }
+            catch { }
+        }
+
         // Storage
         var (dfOk, dfOutput) = await RunCommand("df", "-B1 /data/data/com.termux/files/home");
         if (dfOk)
@@ -128,6 +153,18 @@ public class SystemController : ControllerBase
                         };
                     }
                 }
+            }
+            catch { }
+        }
+
+        // Volume
+        var (volOk, volInfo) = await RunTermuxCommand("termux-volume");
+        if (volOk)
+        {
+            try
+            {
+                var json = JsonDocument.Parse(volInfo);
+                result["volume"] = json.RootElement;
             }
             catch { }
         }

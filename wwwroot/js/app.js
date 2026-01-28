@@ -1147,6 +1147,23 @@ function renderSystemInfo(info) {
                     ${info.android.release ? `<div class="system-row"><span class="label">Version</span><span class="value">Android ${escapeHtml(info.android.release)}</span></div>` : ''}
                     ${info.android.sdk ? `<div class="system-row"><span class="label">API Level</span><span class="value">${escapeHtml(info.android.sdk)}</span></div>` : ''}
                     ${info.android.id ? `<div class="system-row"><span class="label">Build ID</span><span class="value">${escapeHtml(info.android.id)}</span></div>` : ''}
+                    ${info.android.fingerprint ? `<div class="system-row"><span class="label">Fingerprint</span><span class="value small">${escapeHtml(info.android.fingerprint)}</span></div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    // Hardware Info
+    if (info.hardware) {
+        html += `
+            <div class="system-card">
+                <div class="system-card-header">
+                    <i class="mdi mdi-chip"></i>
+                    Hardware
+                </div>
+                <div class="system-card-body">
+                    ${info.hardware.cpu ? `<div class="system-row"><span class="label">CPU</span><span class="value">${escapeHtml(info.hardware.cpu)}</span></div>` : ''}
+                    ${info.hardware.platform ? `<div class="system-row"><span class="label">Plattform</span><span class="value">${escapeHtml(info.hardware.platform)}</span></div>` : ''}
+                    ${info.hardware.hardware ? `<div class="system-row"><span class="label">Hardware</span><span class="value">${escapeHtml(info.hardware.hardware)}</span></div>` : ''}
                 </div>
             </div>`;
     }
@@ -1217,6 +1234,45 @@ function renderSystemInfo(info) {
             </div>`;
     }
 
+    // Telephony Info
+    if (info.telephony) {
+        html += `
+            <div class="system-card">
+                <div class="system-card-header">
+                    <i class="mdi mdi-sim"></i>
+                    Mobilfunk
+                </div>
+                <div class="system-card-body">
+                    ${info.telephony.network_operator_name ? `<div class="system-row"><span class="label">Anbieter</span><span class="value">${escapeHtml(info.telephony.network_operator_name)}</span></div>` : ''}
+                    ${info.telephony.network_type ? `<div class="system-row"><span class="label">Netzwerktyp</span><span class="value">${escapeHtml(info.telephony.network_type)}</span></div>` : ''}
+                    ${info.telephony.sim_operator_name ? `<div class="system-row"><span class="label">SIM-Anbieter</span><span class="value">${escapeHtml(info.telephony.sim_operator_name)}</span></div>` : ''}
+                    ${info.telephony.sim_state ? `<div class="system-row"><span class="label">SIM-Status</span><span class="value">${escapeHtml(translateSimState(info.telephony.sim_state))}</span></div>` : ''}
+                    ${info.telephony.phone_type ? `<div class="system-row"><span class="label">Telefon-Typ</span><span class="value">${escapeHtml(info.telephony.phone_type)}</span></div>` : ''}
+                    ${info.telephony.data_state ? `<div class="system-row"><span class="label">Datenverbindung</span><span class="value">${escapeHtml(translateDataState(info.telephony.data_state))}</span></div>` : ''}
+                </div>
+            </div>`;
+    }
+
+    // Volume Info
+    if (info.volume && Array.isArray(info.volume)) {
+        html += `
+            <div class="system-card">
+                <div class="system-card-header">
+                    <i class="mdi mdi-volume-high"></i>
+                    Lautstärke
+                </div>
+                <div class="system-card-body">
+                    ${info.volume.map(v => `
+                        <div class="system-row">
+                            <span class="label">${escapeHtml(translateVolumeStream(v.stream))}</span>
+                            <span class="value">${v.volume} / ${v.max_volume}</span>
+                        </div>
+                        <div class="progress-bar small"><div class="fill" style="width: ${Math.round((v.volume / v.max_volume) * 100)}%"></div></div>
+                    `).join('')}
+                </div>
+            </div>`;
+    }
+
     elements.systemInfo.innerHTML = html || '<div class="empty">Keine Systeminformationen verfügbar</div>';
 }
 
@@ -1242,4 +1298,39 @@ function translateBatteryHealth(health) {
         'UNKNOWN': 'Unbekannt',
     };
     return map[health] || health;
+}
+
+function translateSimState(state) {
+    const map = {
+        'READY': 'Bereit',
+        'ABSENT': 'Nicht eingelegt',
+        'PIN_REQUIRED': 'PIN erforderlich',
+        'PUK_REQUIRED': 'PUK erforderlich',
+        'NETWORK_LOCKED': 'Netzwerk gesperrt',
+        'UNKNOWN': 'Unbekannt',
+    };
+    return map[state] || state;
+}
+
+function translateDataState(state) {
+    const map = {
+        'CONNECTED': 'Verbunden',
+        'CONNECTING': 'Verbindet...',
+        'DISCONNECTED': 'Getrennt',
+        'SUSPENDED': 'Pausiert',
+        'UNKNOWN': 'Unbekannt',
+    };
+    return map[state] || state;
+}
+
+function translateVolumeStream(stream) {
+    const map = {
+        'music': 'Medien',
+        'ring': 'Klingelton',
+        'alarm': 'Wecker',
+        'notification': 'Benachrichtigung',
+        'system': 'System',
+        'call': 'Anruf',
+    };
+    return map[stream] || stream;
 }
