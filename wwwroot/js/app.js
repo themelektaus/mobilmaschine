@@ -134,11 +134,6 @@ function closeCustomSelect() {
 // Initialize first option as selected
 elements.customSelectDropdown.querySelector('.custom-select-option').classList.add('selected');
 
-window.addEventListener('popstate', (e) => {
-    const path = e.state?.path ?? '';
-    loadDirectory(path, false);
-});
-
 elements.lightboxClose.addEventListener('click', closeLightbox);
 elements.lightboxBackdrop.addEventListener('click', closeLightbox);
 document.addEventListener('keydown', (e) => {
@@ -225,15 +220,11 @@ async function loadDirectory(path, pushState = true) {
         state.entries = data.entries;
         state.parentPath = data.parentPath;
 
-        if (pushState) {
-            history.pushState({ path }, '', `#${path}`);
-        }
-
         renderBreadcrumb(path);
-        renderEntries();
     } catch (err) {
-        elements.fileList.innerHTML = `<div class="empty">Fehler: ${escapeHtml(err.message)}</div>`;
         showError(err.message);
+    } finally {
+        renderEntries();
     }
 }
 
