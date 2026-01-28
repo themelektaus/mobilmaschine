@@ -455,6 +455,9 @@ function showContextMenu(anchor, entry) {
 
     items += `<div class="context-menu-divider"></div>`;
     items += `<button class="context-menu-item" data-action="info"><i class="mdi mdi-information-outline"></i>Info</button>`;
+    if (!isFile) {
+        items += `<button class="context-menu-item" data-action="calculate-size"><i class="mdi mdi-folder-search"></i>Größe berechnen</button>`;
+    }
     items += `<div class="context-menu-divider"></div>`;
     items += `<button class="context-menu-item" data-action="rename"><i class="mdi mdi-rename"></i>Umbenennen</button>`;
     items += `<button class="context-menu-item" data-action="cut"><i class="mdi mdi-content-cut"></i>Ausschneiden</button>`;
@@ -515,6 +518,9 @@ function handleContextAction(action, entry) {
         case 'info':
             showFileInfo(entry.path);
             break;
+        case 'calculate-size':
+            calculateFolderSize(entry.path, entry.name);
+            break;
         case 'delete':
             confirmDelete(entry.path, entry.name, entry.type);
             break;
@@ -574,6 +580,32 @@ async function showFileInfo(path) {
         document.body.style.overflow = 'hidden';
     } catch {
         showError('Info konnte nicht geladen werden.');
+    }
+}
+
+async function calculateFolderSize(path, name) {
+    elements.lightboxTitle.textContent = `Größe: ${name}`;
+    elements.lightboxDownload.style.display = 'none';
+    elements.lightboxBody.innerHTML = '<div class="loading">Wird berechnet...</div>';
+    elements.lightbox.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    try {
+        const res = await fetch(`api/files/size?path=${encodeURIComponent(path)}`);
+        if (!res.ok) throw new Error('Fehler beim Berechnen');
+        const data = await res.json();
+
+        const rows = [
+            ['Ordner', escapeHtml(name)],
+            ['Gesamtgröße', formatSize(data.size)],
+            ['Dateien', data.files.toLocaleString('de-DE')],
+            ['Unterordner', data.directories.toLocaleString('de-DE')],
+        ];
+
+        const html = `<dl class="info-grid">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+        elements.lightboxBody.innerHTML = html;
+    } catch {
+        elements.lightboxBody.innerHTML = '<div class="empty">Größe konnte nicht berechnet werden.</div>';
     }
 }
 

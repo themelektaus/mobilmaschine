@@ -17,4 +17,5 @@ public interface IFileSystemService
     void Rename(string relativePath, string newName);
     void Copy(string sourcePath, string destinationDir);
     void Move(string sourcePath, string destinationDir);
+    (long size, int files, int directories) GetDirectorySize(string relativePath);
 }

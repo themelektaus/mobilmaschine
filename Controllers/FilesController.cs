@@ -260,6 +260,24 @@ public class FilesController(IFileSystemService fileSystem) : ControllerBase
             return StatusCode(403, new { error = ex.Message });
         }
     }
+
+    [HttpGet("size")]
+    public IActionResult Size([FromQuery] string path)
+    {
+        try
+        {
+            var (size, files, directories) = _fileSystem.GetDirectorySize(path);
+            return Ok(new { size, files, directories });
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return NotFound(new { error = "Directory not found." });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { error = ex.Message });
+        }
+    }
 }
 
 public record SaveRequest(string Content);

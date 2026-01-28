@@ -349,4 +349,46 @@ public class FileSystemService : IFileSystemService
     {
         return Path.GetRelativePath(_rootPath, fullPath).Replace('\\', '/');
     }
+
+    public (long size, int files, int directories) GetDirectorySize(string relativePath)
+    {
+        var fullPath = ResolvePath(relativePath);
+
+        if (!Directory.Exists(fullPath))
+            throw new DirectoryNotFoundException($"Directory not found: {relativePath}");
+
+        return CalculateDirectorySize(new DirectoryInfo(fullPath));
+    }
+
+    static (long size, int files, int directories) CalculateDirectorySize(DirectoryInfo dir)
+    {
+        long totalSize = 0;
+        int totalFiles = 0;
+        int totalDirs = 0;
+
+        try
+        {
+            foreach (var file in dir.EnumerateFiles())
+            {
+                try
+                {
+                    totalSize += file.Length;
+                    totalFiles++;
+                }
+                catch { }
+            }
+
+            foreach (var subDir in dir.EnumerateDirectories())
+            {
+                totalDirs++;
+                var (subSize, subFiles, subDirs) = CalculateDirectorySize(subDir);
+                totalSize += subSize;
+                totalFiles += subFiles;
+                totalDirs += subDirs;
+            }
+        }
+        catch { }
+
+        return (totalSize, totalFiles, totalDirs);
+    }
 }
