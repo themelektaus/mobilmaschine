@@ -61,8 +61,8 @@ public class FilesController(IFileSystemService fileSystem) : ControllerBase
             foreach (var file in files)
             {
                 await using var stream = file.OpenReadStream();
-                await _fileSystem.SaveFileAsync(path, file.FileName, stream);
-                results.Add(new { name = file.FileName, size = file.Length });
+                var savedName = await _fileSystem.SaveFileAsync(path, file.FileName, stream);
+                results.Add(new { name = savedName, size = file.Length });
             }
 
             return Ok(new { uploaded = results });
@@ -277,6 +277,27 @@ public class FilesController(IFileSystemService fileSystem) : ControllerBase
         {
             return StatusCode(403, new { error = ex.Message });
         }
+    }
+
+    [HttpPost("sizes")]
+    public IActionResult GetSizes([FromBody] string[] paths)
+    {
+        var results = new Dictionary<string, object>();
+
+        foreach (var path in (paths ?? []).Take(50))
+        {
+            try
+            {
+                var (size, files, directories) = _fileSystem.GetDirectorySize(path);
+                results[path] = new { size, files, directories };
+            }
+            catch
+            {
+                // Skip paths that fail
+            }
+        }
+
+        return Ok(results);
     }
 }
 

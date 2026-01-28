@@ -7,10 +7,11 @@ A web-based file manager and system utility built with ASP.NET Core and vanilla 
 ### File Management
 - Browse directories, create/rename/delete files and folders
 - Copy, cut, and paste operations
-- Drag-and-drop file upload with progress tracking
-- Built-in viewers for images, videos, audio, PDFs, and text files
+- Drag-and-drop file upload with progress tracking (auto-renames duplicates)
+- Built-in viewers for images, videos, audio, and text files
 - Inline text file editing with save functionality
-- Sort files by name, date, or size
+- Automatic directory size calculation with backend caching
+- Sort files by name, date, or size (includes calculated directory sizes)
 - Breadcrumb navigation
 
 ### SMS Messages
@@ -22,9 +23,12 @@ A web-based file manager and system utility built with ASP.NET Core and vanilla 
 ### System Information
 - Device info (manufacturer, model)
 - Android version and API level
+- Hardware info (CPU, platform)
 - Battery status with charge level and health
 - Storage usage statistics
 - WiFi connection details
+- Telephony info (carrier, network type, SIM status)
+- Interactive volume controls for all audio streams
 - Requires Termux:API
 
 ### UI
@@ -88,7 +92,8 @@ Mobilmaschine/
 │   └── SystemController.cs      # System info, SMS, battery API
 ├── Services/
 │   ├── IFileSystemService.cs    # Service interface
-│   └── FileSystemService.cs     # File system operations
+│   ├── FileSystemService.cs     # File system operations
+│   └── DirectorySizeCache.cs    # Directory size caching
 ├── Models/
 │   └── FileSystemEntry.cs       # Data models
 ├── wwwroot/
@@ -107,7 +112,8 @@ Mobilmaschine/
 |--------|----------|-------------|
 | GET | `/api/system/battery` | Get battery status |
 | GET | `/api/system/sms` | List SMS messages (query: `limit`) |
-| GET | `/api/system/info` | Get device, Android, battery, WiFi, and storage info |
+| GET | `/api/system/info` | Get device, Android, hardware, battery, WiFi, telephony, volume info |
+| POST | `/api/system/volume` | Set volume (query: `stream`, `volume`) |
 
 ### Files
 
@@ -124,6 +130,8 @@ Mobilmaschine/
 | PUT | `/api/files/move` | Move files/folders |
 | PUT | `/api/files/copy` | Copy files/folders |
 | DELETE | `/api/files` | Delete a file or folder |
+| GET | `/api/files/size` | Get directory size (query: `path`) |
+| POST | `/api/files/sizes` | Get sizes for multiple directories (body: string[]) |
 
 ## Supported File Types
 
@@ -131,7 +139,6 @@ Mobilmaschine/
 - Images: jpg, png, gif, webp, svg, bmp, ico
 - Video: mp4, webm, ogg, mov
 - Audio: mp3, wav, flac, ogg, aac, m4a, opus
-- Documents: pdf
 - Text: txt, md, json, xml, html, css, js, and more
 
 ## License

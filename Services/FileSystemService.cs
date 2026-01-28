@@ -7,11 +7,13 @@ public class FileSystemService : IFileSystemService
 {
     readonly string _rootPath;
     readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
+    readonly DirectorySizeCache _sizeCache;
 
-    public FileSystemService(IConfiguration configuration)
+    public FileSystemService(IConfiguration configuration, DirectorySizeCache sizeCache)
     {
         var rootPaths = configuration.GetSection("FileSystem:RootPaths").Get<string[]>();
         _rootPath = rootPaths.FirstOrDefault(Directory.Exists);
+        _sizeCache = sizeCache;
     }
 
     public string ResolvePath(string relativePath)
@@ -136,7 +138,7 @@ public class FileSystemService : IFileSystemService
         return "application/octet-stream";
     }
 
-    public async Task SaveFileAsync(string directoryPath, string fileName, Stream content)
+    public async Task<string> SaveFileAsync(string directoryPath, string fileName, Stream content)
     {
         var dirFull = ResolvePath(directoryPath);
 
@@ -152,8 +154,15 @@ public class FileSystemService : IFileSystemService
         if (!targetPath.StartsWith(_rootPath, StringComparison.OrdinalIgnoreCase))
             throw new UnauthorizedAccessException("Access denied: path is outside root.");
 
+        // Get unique path if file already exists
+        targetPath = GetUniquePath(targetPath);
+
         await using var fs = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
         await content.CopyToAsync(fs);
+
+        _sizeCache.Invalidate(directoryPath);
+
+        return Path.GetFileName(targetPath);
     }
 
     public async Task WriteTextAsync(string relativePath, string content)
@@ -164,6 +173,11 @@ public class FileSystemService : IFileSystemService
             throw new FileNotFoundException($"File not found: {relativePath}");
 
         await File.WriteAllTextAsync(fullPath, content);
+
+        // Invalidate parent directory cache
+        var parentPath = GetParentPath(relativePath);
+        if (parentPath != null)
+            _sizeCache.Invalidate(parentPath);
     }
 
     public void Delete(string relativePath)
@@ -176,12 +190,14 @@ public class FileSystemService : IFileSystemService
         if (File.Exists(fullPath))
         {
             File.Delete(fullPath);
+            _sizeCache.Invalidate(relativePath);
             return;
         }
 
         if (Directory.Exists(fullPath))
         {
             Directory.Delete(fullPath, recursive: true);
+            _sizeCache.Invalidate(relativePath);
             return;
         }
 
@@ -206,6 +222,7 @@ public class FileSystemService : IFileSystemService
             throw new IOException($"Directory already exists: {sanitized}");
 
         Directory.CreateDirectory(targetPath);
+        _sizeCache.Invalidate(parentPath);
     }
 
     public void CreateFile(string parentPath, string name)
@@ -226,6 +243,7 @@ public class FileSystemService : IFileSystemService
             throw new IOException($"File already exists: {sanitized}");
 
         File.Create(targetPath).Dispose();
+        _sizeCache.Invalidate(parentPath);
     }
 
     public void Rename(string relativePath, string newName)
@@ -254,6 +272,8 @@ public class FileSystemService : IFileSystemService
             Directory.Move(fullPath, targetPath);
         else
             throw new FileNotFoundException($"Not found: {relativePath}");
+
+        _sizeCache.Invalidate(relativePath);
     }
 
     public void Copy(string sourcePath, string destinationDir)
@@ -284,6 +304,8 @@ public class FileSystemService : IFileSystemService
         {
             throw new FileNotFoundException($"Not found: {sourcePath}");
         }
+
+        _sizeCache.Invalidate(destinationDir);
     }
 
     static void CopyDirectoryRecursive(DirectoryInfo source, DirectoryInfo target)
@@ -326,6 +348,9 @@ public class FileSystemService : IFileSystemService
             Directory.Move(srcFull, targetPath);
         else
             throw new FileNotFoundException($"Not found: {sourcePath}");
+
+        _sizeCache.Invalidate(sourcePath);
+        _sizeCache.Invalidate(destinationDir);
     }
 
     static string GetUniquePath(string path)
@@ -350,6 +375,13 @@ public class FileSystemService : IFileSystemService
         return Path.GetRelativePath(_rootPath, fullPath).Replace('\\', '/');
     }
 
+    static string GetParentPath(string relativePath)
+    {
+        var normalized = (relativePath ?? "").Replace('\\', '/').Trim('/');
+        var idx = normalized.LastIndexOf('/');
+        return idx >= 0 ? normalized[..idx] : (string.IsNullOrEmpty(normalized) ? null : "");
+    }
+
     public (long size, int files, int directories) GetDirectorySize(string relativePath)
     {
         var fullPath = ResolvePath(relativePath);
@@ -357,7 +389,16 @@ public class FileSystemService : IFileSystemService
         if (!Directory.Exists(fullPath))
             throw new DirectoryNotFoundException($"Directory not found: {relativePath}");
 
-        return CalculateDirectorySize(new DirectoryInfo(fullPath));
+        // Check cache first
+        var cached = _sizeCache.Get(relativePath);
+        if (cached != null)
+            return (cached.Size, cached.Files, cached.Directories);
+
+        // Calculate and cache
+        var result = CalculateDirectorySize(new DirectoryInfo(fullPath));
+        _sizeCache.Set(relativePath, result.size, result.files, result.directories);
+
+        return result;
     }
 
     static (long size, int files, int directories) CalculateDirectorySize(DirectoryInfo dir)

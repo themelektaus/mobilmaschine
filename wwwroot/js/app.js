@@ -71,8 +71,7 @@ const PREVIEW_TYPES = {
            'cpp', 'c', 'h', 'css', 'html', 'htm', 'sh', 'bash', 'yaml', 'yml', 'toml',
            'ini', 'cfg', 'conf', 'env', 'gitignore', 'dockerfile', 'makefile',
            'sql', 'rb', 'php', 'go', 'rs', 'kt', 'swift', 'dart', 'lua', 'r',
-           'bat', 'ps1', 'csproj', 'sln', 'props', 'targets'],
-    pdf: ['pdf'],
+           'bat', 'ps1', 'csproj', 'sln', 'props', 'targets']
 };
 
 function getPreviewType(ext) {
@@ -207,7 +206,7 @@ loadDirectory('');
 
 async function loadDirectory(path, pushState = true) {
     state.currentPath = path;
-    elements.fileList.innerHTML = '<div class="loading">Wird geladen...</div>';
+    elements.fileList.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
 
     try {
         const response = await fetch(`api/files?path=${encodeURIComponent(path)}`);
@@ -263,17 +262,13 @@ async function openLightbox(path, name, previewType) {
         case 'audio':
             content = `<audio controls autoplay><source src="${escapeAttr(url)}">Nicht unterstützt.</audio>`;
             break;
-        case 'pdf':
-            content = `<iframe src="${escapeAttr(url)}"></iframe>`;
-            break;
         case 'text':
-            content = '<pre>Wird geladen...</pre>';
+            content = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
             break;
     }
 
     elements.lightboxBody.innerHTML = content;
     elements.lightbox.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
 
     if (previewType === 'text') {
         try {
@@ -290,7 +285,6 @@ function closeLightbox() {
     elements.lightbox.classList.add('hidden');
     elements.lightboxSave.classList.add('hidden');
     elements.lightboxSave.onclick = null;
-    document.body.style.overflow = '';
     // stop any playing media
     elements.lightboxBody.querySelectorAll('video, audio').forEach((el) => {
         el.pause();
@@ -307,9 +301,8 @@ async function editFile(path, name) {
     elements.lightboxDownload.href = url;
     elements.lightboxDownload.download = name;
     elements.lightboxDownload.style.display = '';
-    elements.lightboxBody.innerHTML = '<pre>Wird geladen...</pre>';
+    elements.lightboxBody.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
     elements.lightbox.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
 
     try {
         const res = await fetch(url);
@@ -455,9 +448,6 @@ function showContextMenu(anchor, entry) {
 
     items += `<div class="context-menu-divider"></div>`;
     items += `<button class="context-menu-item" data-action="info"><i class="mdi mdi-information-outline"></i>Info</button>`;
-    if (!isFile) {
-        items += `<button class="context-menu-item" data-action="calculate-size"><i class="mdi mdi-folder-search"></i>Größe berechnen</button>`;
-    }
     items += `<div class="context-menu-divider"></div>`;
     items += `<button class="context-menu-item" data-action="rename"><i class="mdi mdi-rename"></i>Umbenennen</button>`;
     items += `<button class="context-menu-item" data-action="cut"><i class="mdi mdi-content-cut"></i>Ausschneiden</button>`;
@@ -518,9 +508,6 @@ function handleContextAction(action, entry) {
         case 'info':
             showFileInfo(entry.path);
             break;
-        case 'calculate-size':
-            calculateFolderSize(entry.path, entry.name);
-            break;
         case 'delete':
             confirmDelete(entry.path, entry.name, entry.type);
             break;
@@ -565,9 +552,22 @@ async function showFileInfo(path) {
             ['Typ', isFile ? `Datei${info.extension ? ` (.${escapeHtml(info.extension)})` : ''}` : 'Ordner'],
         ];
         if (isFile && info.size != null) {
-            rows.push(['Grösse', formatSize(info.size)]);
+            rows.push(['Größe', formatSize(info.size)]);
         }
         rows.push(['Geändert', formatDate(info.lastModified)]);
+
+        // For directories, fetch size info
+        if (!isFile) {
+            try {
+                const sizeRes = await fetch(`api/files/size?path=${encodeURIComponent(path)}`);
+                if (sizeRes.ok) {
+                    const sizeData = await sizeRes.json();
+                    rows.push(['Größe', formatSize(sizeData.size)]);
+                    rows.push(['Dateien', sizeData.files.toLocaleString('de-DE')]);
+                    rows.push(['Unterordner', sizeData.directories.toLocaleString('de-DE')]);
+                }
+            } catch { }
+        }
 
         const html = `<dl class="info-grid">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
 
@@ -577,35 +577,8 @@ async function showFileInfo(path) {
         elements.lightboxDownload.style.display = isFile ? '' : 'none';
         elements.lightboxBody.innerHTML = html;
         elements.lightbox.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
     } catch {
         showError('Info konnte nicht geladen werden.');
-    }
-}
-
-async function calculateFolderSize(path, name) {
-    elements.lightboxTitle.textContent = `Größe: ${name}`;
-    elements.lightboxDownload.style.display = 'none';
-    elements.lightboxBody.innerHTML = '<div class="loading">Wird berechnet...</div>';
-    elements.lightbox.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-
-    try {
-        const res = await fetch(`api/files/size?path=${encodeURIComponent(path)}`);
-        if (!res.ok) throw new Error('Fehler beim Berechnen');
-        const data = await res.json();
-
-        const rows = [
-            ['Ordner', escapeHtml(name)],
-            ['Gesamtgröße', formatSize(data.size)],
-            ['Dateien', data.files.toLocaleString('de-DE')],
-            ['Unterordner', data.directories.toLocaleString('de-DE')],
-        ];
-
-        const html = `<dl class="info-grid">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
-        elements.lightboxBody.innerHTML = html;
-    } catch {
-        elements.lightboxBody.innerHTML = '<div class="empty">Größe konnte nicht berechnet werden.</div>';
     }
 }
 
@@ -794,7 +767,7 @@ function renderBreadcrumb(path) {
     });
 }
 
-function renderEntries() {
+function renderEntries(skipSizeLoad = false) {
     const sorted = sortEntries([...state.entries], state.sortBy);
     const dirs = sorted.filter((e) => e.type === 0);
     const files = sorted.filter((e) => e.type === 1);
@@ -824,7 +797,9 @@ function renderEntries() {
         const isDir = entry.type === 0;
         const icon = isDir ? getDirectoryIcon(entry.name) : getFileIcon(entry.extension);
         const action = isDir ? 'navigate' : 'open';
-        const size = isDir ? '' : formatSize(entry.size);
+        const size = isDir
+            ? (entry.size != null ? formatSize(entry.size) : '<span class="calculating"><i class="mdi mdi-loading spin"></i></span>')
+            : formatSize(entry.size);
         const date = formatDate(entry.lastModified);
 
         html += `
@@ -866,6 +841,61 @@ function renderEntries() {
             });
         }
     });
+
+    // Load directory sizes asynchronously
+    if (!skipSizeLoad) {
+        loadDirectorySizes();
+    }
+}
+
+async function loadDirectorySizes() {
+    const dirPaths = state.entries
+        .filter(e => e.type === 0)
+        .map(e => e.path);
+
+    if (dirPaths.length === 0) return;
+
+    try {
+        const res = await fetch('api/files/sizes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dirPaths),
+        });
+
+        if (!res.ok) return;
+        const sizes = await res.json();
+
+        for (const [path, data] of Object.entries(sizes)) {
+            updateDirectorySize(path, data);
+        }
+
+        // Re-render if sorting by size to apply new order
+        if (state.sortBy.startsWith('size-')) {
+            renderEntries(true);
+        }
+    } catch {
+        // Silently fail - sizes will just show "..."
+    }
+}
+
+function updateDirectorySize(path, data) {
+    // Update state entry with calculated size
+    const entry = state.entries.find(e => e.path === path);
+    if (entry) {
+        entry.size = data.size;
+        entry.files = data.files;
+        entry.directories = data.directories;
+    }
+
+    // Update DOM
+    const el = document.querySelector(`.file-entry[data-path="${CSS.escape(path)}"]`);
+    if (!el) return;
+
+    const sizeEl = el.querySelector('.size');
+    if (sizeEl) {
+        sizeEl.innerHTML = formatSize(data.size);
+        sizeEl.title = `${data.files.toLocaleString('de-DE')} Dateien, ${data.directories.toLocaleString('de-DE')} Ordner`;
+    }
 }
 
 // --- Sorting ---
@@ -1057,7 +1087,7 @@ elements.btnRefreshSms.addEventListener('click', () => loadSms());
 // --- SMS ---
 
 async function loadSms() {
-    elements.smsList.innerHTML = '<div class="loading">Wird geladen...</div>';
+    elements.smsList.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
 
     try {
         const res = await fetch('api/system/sms');
@@ -1131,7 +1161,7 @@ function formatSmsDate(dateStr) {
 // --- System Info ---
 
 async function loadSystemInfo() {
-    elements.systemInfo.innerHTML = '<div class="loading">Wird geladen...</div>';
+    elements.systemInfo.innerHTML = '<div class="loading"><i class="mdi mdi-loading spin"></i>Wird geladen...</div>';
 
     try {
         const res = await fetch('api/system/info');

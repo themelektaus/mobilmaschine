@@ -435,6 +435,28 @@ main {
     min-width: 70px;
 }
 
+.file-entry .size:has(.calculating) {
+    color: unset;
+}
+
+.file-entry .size .calculating {
+    .spin {
+        scale: 1.25;
+    }
+}
+
+/* --- Spin Animation --- */
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(720deg); }
+}
+
+.spin {
+    animation: spin 1s cubic-bezier(.75, .5, .5, .75) infinite;
+    display: inline-block;
+}
+
 .file-entry.parent-dir {
     color: var(--accent-text);
 }
@@ -549,6 +571,15 @@ main {
     padding: 60px 20px;
     color: var(--text-muted);
     font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.loading .mdi {
+    font-size: 28px;
+    color: var(--accent-text);
 }
 
 .empty {
