@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Mobilmaschine.Controllers;
@@ -6,50 +8,49 @@ namespace Mobilmaschine.Controllers;
 [Route("api/[controller]")]
 public class SystemController : ControllerBase
 {
-    static readonly string[] BatteryPaths =
-    [
-        "/sys/class/power_supply/battery",
-        "/sys/class/power_supply/BAT0",
-        "/sys/class/power_supply/BAT1",
-    ];
+    const string TermuxBatteryCommand = "/data/data/com.termux/files/usr/bin/termux-battery-status";
 
     [HttpGet("battery")]
-    public IActionResult GetBatteryStatus()
+    public async Task<IActionResult> GetBatteryStatus()
     {
-        foreach (var basePath in BatteryPaths)
+        try
         {
-            if (!Directory.Exists(basePath))
-                continue;
-
-            try
+            using var process = new Process
             {
-                var capacityPath = Path.Combine(basePath, "capacity");
-                var statusPath = Path.Combine(basePath, "status");
-
-                if (!System.IO.File.Exists(capacityPath))
-                    continue;
-
-                var capacityText = System.IO.File.ReadAllText(capacityPath).Trim();
-                if (!int.TryParse(capacityText, out var percentage))
-                    continue;
-
-                var status = "Unknown";
-                if (System.IO.File.Exists(statusPath))
-                    status = System.IO.File.ReadAllText(statusPath).Trim();
-
-                return Ok(new
+                StartInfo = new ProcessStartInfo
                 {
-                    percentage,
-                    status,
-                    charging = status.Equals("Charging", StringComparison.OrdinalIgnoreCase),
-                });
-            }
-            catch
-            {
-                continue;
-            }
-        }
+                    FileName = TermuxBatteryCommand,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            };
 
-        return NotFound(new { error = "Battery information not available" });
+            process.Start();
+            var output = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+                return NotFound(new { error = "Battery information not available" });
+
+            var json = JsonDocument.Parse(output);
+            var root = json.RootElement;
+
+            var percentage = root.GetProperty("percentage").GetInt32();
+            var status = root.GetProperty("status").GetString() ?? "Unknown";
+            var charging = status.Equals("CHARGING", StringComparison.OrdinalIgnoreCase);
+
+            return Ok(new
+            {
+                percentage,
+                status,
+                charging,
+            });
+        }
+        catch
+        {
+            return NotFound(new { error = "Battery information not available" });
+        }
     }
 }
