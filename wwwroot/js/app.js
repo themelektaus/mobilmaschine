@@ -1170,7 +1170,7 @@ function renderSystemInfo(info) {
                     <div class="progress-bar"><div class="fill ${batteryClass}" style="width: ${percentage}%"></div></div>
                     ${info.battery.status ? `<div class="system-row"><span class="label">Status</span><span class="value">${escapeHtml(translateBatteryStatus(info.battery.status))}</span></div>` : ''}
                     ${info.battery.health ? `<div class="system-row"><span class="label">Zustand</span><span class="value">${escapeHtml(translateBatteryHealth(info.battery.health))}</span></div>` : ''}
-                    ${info.battery.temperature != null ? `<div class="system-row"><span class="label">Temperatur</span><span class="value">${(info.battery.temperature / 10).toFixed(1)}°C</span></div>` : ''}
+                    ${info.battery.temperature != null ? `<div class="system-row"><span class="label">Temperatur</span><span class="value">${info.battery.temperature}°C</span></div>` : ''}
                 </div>
             </div>`;
     }
@@ -1209,7 +1209,7 @@ function renderSystemInfo(info) {
                     WLAN
                 </div>
                 <div class="system-card-body">
-                    ${info.wifi.ssid ? `<div class="system-row"><span class="label">Netzwerk</span><span class="value">${escapeHtml(info.wifi.ssid)}</span></div>` : ''}
+                    ${(info.wifi.ssid && info.wifi.ssid != `<unknown ssid>`) ? `<div class="system-row"><span class="label">Netzwerk</span><span class="value">${escapeHtml(info.wifi.ssid)}</span></div>` : ''}
                     ${info.wifi.link_speed_mbps ? `<div class="system-row"><span class="label">Geschwindigkeit</span><span class="value">${info.wifi.link_speed_mbps} Mbps</span></div>` : ''}
                     ${info.wifi.rssi != null ? `<div class="system-row"><span class="label">Signal</span><span class="value">${info.wifi.rssi} dBm</span></div>` : ''}
                     ${info.wifi.ip ? `<div class="system-row"><span class="label">IP-Adresse</span><span class="value">${escapeHtml(info.wifi.ip)}</span></div>` : ''}
