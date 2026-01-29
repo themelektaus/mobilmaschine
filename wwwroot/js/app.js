@@ -275,12 +275,14 @@ async function openLightbox(path, name, previewType) {
     $.lightbox.classList.remove('hidden');
 
     if (previewType === 'text') {
+        let text;
         try {
             const res = await fetch(url);
-            const text = await res.text();
-            $.lightboxBody.query('pre').textContent = text;
+            text = await res.text();
         } catch {
-            $.lightboxBody.query('pre').textContent = 'Fehler beim Laden der Datei.';
+            text = 'Fehler beim Laden der Datei.';
+        } finally {
+            $.lightboxBody.innerHTML = `<pre>${text}</pre>`;
         }
     }
 }
