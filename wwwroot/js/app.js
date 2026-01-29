@@ -60,14 +60,22 @@ const $ = {
 };
 
 const PREVIEW_TYPES = {
-    image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'],
-    video: ['mp4', 'webm', 'ogg', 'mov'],
-    audio: ['mp3', 'wav', 'flac', 'ogg', 'aac', 'm4a', 'opus', 'weba'],
-    text: ['txt', 'md', 'log', 'json', 'xml', 'csv', 'js', 'ts', 'py', 'java', 'cs',
-           'cpp', 'c', 'h', 'css', 'html', 'htm', 'sh', 'bash', 'yaml', 'yml', 'toml',
-           'ini', 'cfg', 'conf', 'env', 'gitignore', 'dockerfile', 'makefile',
-           'sql', 'rb', 'php', 'go', 'rs', 'kt', 'swift', 'dart', 'lua', 'r',
-           'bat', 'ps1', 'csproj', 'sln', 'props', 'targets']
+    image: [
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'
+    ],
+    video: [
+        'mp4', 'webm', 'ogg', 'mov'
+    ],
+    audio: [
+        'mp3', 'wav', 'flac', 'ogg', 'aac', 'm4a', 'opus', 'weba'
+    ],
+    text: [
+        'txt', 'md', 'log', 'json', 'xml', 'csv', 'js', 'ts', 'py', 'java', 'cs',
+        'cpp', 'c', 'h', 'css', 'html', 'htm', 'sh', 'bash', 'yaml', 'yml', 'toml',
+        'ini', 'cfg', 'conf', 'env', 'gitignore', 'dockerfile', 'makefile',
+        'sql', 'rb', 'php', 'go', 'rs', 'kt', 'swift', 'dart', 'lua', 'r',
+        'bat', 'ps1', 'csproj', 'sln', 'props', 'targets'
+    ]
 };
 
 function getPreviewType(ext) {
