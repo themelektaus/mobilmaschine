@@ -2,14 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "watch",
-      "command": "dotnet",
+      "label": "run",
+      "command": "dotnet-sync",
       "type": "process",
       "args": [
-        "watch",
-        "run",
-        "--project",
-        "${workspaceFolder}/Mobilmaschine.csproj"
+        "Mobilmaschine",
+        "run"
       ],
       "problemMatcher": "$msCompile",
       "isBackground": true,
