@@ -682,7 +682,7 @@ function renderUploadItem(item) {
 }
 
 function updateUploadItem(item) {
-    const div = $id(`upload-${item.id}`);
+    const div = query(`#upload-${item.id}`);
     if (!div) return;
 
     const statusEl = div.query('.upload-status');
